@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { projectIntakeSchema, roadmapSchema } from "../domain/validation";
+import { learningActivitySchema } from "../domain/learning";
 
 export const sessionProjectSchema = z.object({
   id: z.uuid(),
@@ -11,8 +12,15 @@ export const sessionProjectSchema = z.object({
   roadmap: roadmapSchema,
   completedMilestoneIds: z.array(z.string()).max(20),
   createdAt: z.iso.datetime(),
+  learning: z.record(z.string(), learningActivitySchema).optional(),
 }).strict().superRefine((project, context) => {
   const ids = new Set(project.roadmap.milestones.map((milestone) => milestone.id));
+  for (const [id, activity] of Object.entries(project.learning ?? {})) {
+    const milestone = project.roadmap.milestones.find((item) => item.id === id);
+    if (!milestone || new Set(activity.checkedCriteria).size !== activity.checkedCriteria.length || activity.checkedCriteria.some((index) => index >= milestone.acceptanceCriteria.length)) {
+      context.addIssue({ code: "custom", path: ["learning", id], message: "Learning work must reference this milestone and its criteria." });
+    }
+  }
   if (new Set(project.completedMilestoneIds).size !== project.completedMilestoneIds.length || project.completedMilestoneIds.some((id) => !ids.has(id))) {
     context.addIssue({ code: "custom", path: ["completedMilestoneIds"], message: "Completion records must reference unique milestones in this project." });
   }

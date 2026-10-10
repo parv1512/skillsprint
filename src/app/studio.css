@@ -82,3 +82,42 @@ body { font-family: var(--font-ui); }
 .intake-layout { grid-template-columns: minmax(0, 680px); }
 .passport-legend { margin-top: 0; }
 @media (max-width: 600px) { .field-notes main { padding-top: 30px; }.studio-heading { align-items: flex-start; } }
+.learning-tabs { display:flex; gap:24px; border-bottom:1px solid var(--line); margin-top:26px; }
+.learning-tabs button { background:transparent; border:0; border-bottom:2px solid transparent; padding:14px 0; font:inherit; font-size:13px; color:var(--muted); cursor:pointer; }
+.learning-tabs button[aria-selected="true"] { color:var(--green); border-bottom-color:var(--green); font-weight:600; }
+.workspace-feedback { min-height:18px; font-size:11px; color:var(--green); margin:14px 0; }
+.learning-workspace [role="tabpanel"] { min-width:0; }
+.learning-workspace [role="tabpanel"][hidden] { display:none; }
+.learning-workspace h3 { font-size:14px; font-weight:600; margin:25px 0 13px; }
+.skill-tags { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:24px; }
+.lesson-empty p,.lesson-content p { font-size:13px; line-height:1.9; color:var(--muted); white-space:pre-wrap; }
+.lesson-content section { margin-bottom:25px; }
+.code-block { font:12px/1.8 var(--font-code); background:#efeee5; padding:18px; border:1px solid var(--line); border-radius:4px; overflow:auto; max-width:100%; }
+.learning-workspace .code-input { font-family:var(--font-code); font-size:12px; }
+.learning-references { border-top:1px solid var(--line); margin-top:28px; padding:18px 0; }
+.learning-references summary { cursor:pointer; color:var(--green); font-size:12px; }
+.learning-references ul { margin-top:20px; }
+.criterion-checks { margin:15px 0 26px; }
+.criterion-checks label { display:flex; align-items:flex-start; gap:10px; font-size:12px; line-height:1.8; margin:13px 0; cursor:pointer; }
+.criterion-checks input { margin-top:5px; accent-color:var(--green); flex-shrink:0; }
+.workspace-actions { display:flex; flex-wrap:wrap; gap:12px; }
+.completion-action { border-top:1px solid var(--line); margin-top:28px; padding-top:24px; }
+.copilot-context { font-size:12px; line-height:1.8; color:var(--muted); margin-bottom:22px; }
+.tutor-conversation { padding:0; margin:0 0 25px; list-style:none; }
+.tutor-conversation li { border-left:2px solid var(--line); padding:14px 16px; margin-bottom:18px; }
+.tutor-conversation .message-tutor { border-color:var(--green); background:#eceee2; }
+.tutor-conversation p { font-size:12px; line-height:1.8; white-space:pre-wrap; overflow-wrap:anywhere; margin-bottom:0; }
+@media (max-width:600px) { .learning-tabs { gap:22px; }.workspace-actions .button { width:100%; }.code-block { padding:12px; } }
+.starter-section { border-bottom:1px solid var(--line); padding-bottom:24px; margin-bottom:26px; }
+.starter-section > summary { cursor:pointer; font-size:14px; font-weight:600; color:var(--green); margin-bottom:18px; }
+.starter-section p,.starter-steps { font-size:12px; line-height:1.8; color:var(--muted); }
+.starter-browser { display:grid; grid-template-columns:145px minmax(0,1fr); border-top:1px solid var(--line); margin:20px 0; }
+.starter-browser nav { padding:16px 12px 0 0; border-right:1px solid var(--line); }
+.starter-browser nav button { width:100%; text-align:left; border:0; border-radius:3px; background:transparent; padding:9px 7px; color:var(--muted); cursor:pointer; overflow-wrap:anywhere; }
+.starter-browser nav code { font:11px/1.6 var(--font-code); }
+.starter-browser nav button[aria-pressed="true"] { background:#e8ebdf; color:var(--green); }
+.starter-file { min-width:0; padding:0 0 0 18px; }
+.starter-file h3 { font:12px/1.6 var(--font-code); overflow-wrap:anywhere; }
+.starter-file .text-link { border:0; background:transparent; cursor:pointer; color:var(--green); padding:0; }
+.starter-steps { padding-left:20px; }.starter-steps li { margin:10px 0; }
+@media(max-width:700px) { .starter-browser { grid-template-columns:1fr; }.starter-browser nav { display:flex; flex-wrap:wrap; gap:5px; border:0; padding-right:0; }.starter-browser nav button { width:auto; max-width:100%; }.starter-file { padding-left:0; } }

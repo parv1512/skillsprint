@@ -37,3 +37,17 @@ Future data operations must derive the owner from the server-authenticated ident
 ## Configuration
 
 Variables are documented in `.env.example`: Gemini API key and chosen model, PostgreSQL connection URL, Auth0 domain/client ID/client secret/session secret, and application base URL. Gemini model access and generation are verified. Auth0 and database configuration have not been verified.
+
+## Phase 3 learning boundary
+
+`/api/learning` validates bounded milestone context and calls `src/lib/ai/learning.ts`. Lessons, tutor replies, and assessment reviews have separate structured schemas. The selected milestone must belong to the supplied roadmap. Credentials stay on the server; origin checks, bounded input, timeouts, and safe errors follow the roadmap API. Both AI endpoints refuse production access pending Phase 4 authentication. Client-supplied context is not authenticated evidence.
+
+Lessons load on explicit request and are cached in session project learning records. Work, knowledge-check answers, AI reviews, and bounded tutoring history are saved separately per milestone. The tutor defaults to a hint, uses previous attempts, and exposes a deliberate full-solution mode. Prompt rules forbid claims of execution and fabricated progress; non-solution code output is also bounded. Model behavior remains probabilistic, and snippets are never executed.
+
+The owner chose student-confirmed completion with assessment tracked separately. `progress.ts` checks prerequisites and student-confirmed criteria, records a confirmation timestamp, and allows reopening (dependent completed milestones must be reopened first). An AI check is not a completion gate. No Passport status is awarded. Phase 4 still requires approved evidence mapping, database schema, authenticated identity, and server ownership checks.
+
+## Starter projects
+
+The owner approved starter files plus guided milestones: remove setup friction, leave meaningful project implementation to the student, and keep full solutions explicit. The first milestone can request a structured starter through the existing learning endpoint. It includes relative file paths, contents, each file's purpose, setup steps, and the first task. The prompt restricts generation to minimal setup and a skeleton, excluding later milestone features.
+
+Starter content is validated and retained with the first milestone. Relative paths reject traversal, hidden files, reserved Windows names, duplicates, and file/directory conflicts. Output size is bounded. Students can inspect and copy files or download a small uncompressed ZIP built without adding dependencies. Code is never executed or written into the student's filesystem by SkillSprint. Generated output is clearly labeled as not executed or tested. Downloading or viewing a starter awards no completion or Passport evidence.

@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import type { Roadmap } from "@/lib/domain/types";
+import type { Roadmap, Milestone } from "@/lib/domain/types";
 import { findSkill } from "@/lib/domain/skills";
 import { Icon } from "./icon";
 
-export function RoadmapView({ roadmap, completedIds = [] }: { roadmap: Roadmap; completedIds?: string[] }) {
+export function RoadmapView({ roadmap, completedIds = [], renderLearning }: { roadmap: Roadmap; completedIds?: string[]; renderLearning?: (milestone: Milestone) => React.ReactNode }) {
   const next = roadmap.milestones.findIndex((milestone) => !completedIds.includes(milestone.id));
   const [selected, setSelected] = useState(Math.max(0, next));
   const milestone = roadmap.milestones[selected];
@@ -20,12 +20,12 @@ export function RoadmapView({ roadmap, completedIds = [] }: { roadmap: Roadmap; 
     })}</ol></nav>
       <section id="milestone-detail" className="milestone-detail" aria-labelledby="milestone-title" key={milestone.id}><p className="eyebrow">MILESTONE {String(selected + 1).padStart(2, "0")} / ~{milestone.estimatedHours} HOURS</p><h2 id="milestone-title">{milestone.title}</h2><p className="milestone-outcome">{milestone.outcome}</p>
         {milestone.prerequisiteIds.length > 0 && <p className="prerequisite-summary">Before this milestone: {milestone.prerequisiteIds.map((id) => roadmap.milestones.find((item) => item.id === id)?.title).join("; ")}.</p>}
-        <div className="brief-section"><h3>Skills</h3><ul className="concept-list">{milestone.skillIds.map((id) => { const skill = findSkill(id); return <li key={id}><span className="skill-state skill-new">New</span><div><strong>{skill?.name ?? id}</strong></div></li>; })}</ul></div>
+        {renderLearning ? renderLearning(milestone) : <><div className="brief-section"><h3>Skills</h3><ul className="concept-list">{milestone.skillIds.map((id) => { const skill = findSkill(id); return <li key={id}><span className="skill-state skill-new">New</span><div><strong>{skill?.name ?? id}</strong></div></li>; })}</ul></div>
         <div className="brief-section"><h3>Tasks</h3><ol className="task-list">{milestone.tasks.map((task, index) => <li key={index}><span>{String(index + 1).padStart(2, "0")}</span><p>{task}</p></li>)}</ol></div>
         <div className="brief-section"><h3>Completion criteria</h3><ul className="criteria-list">{milestone.acceptanceCriteria.map((criterion, index) => <li key={index}>{criterion}</li>)}</ul></div>
         <div className="assessment-note"><p className="eyebrow">CHECK YOUR UNDERSTANDING</p><p>{milestone.assessmentPrompt}</p><small>Not assessed yet</small></div>
         {milestone.resources.length > 0 && <div className="brief-section"><h3>References</h3><ul className="resource-list">{milestone.resources.map((resource) => <li key={resource.url}><a href={resource.url} target="_blank" rel="noopener noreferrer">{resource.title}<Icon name="arrow" width="16" /><span className="sr-only"> (opens in a new tab)</span></a></li>)}</ul></div>}
-        <p className="brief-footer">Preview only — completion tracking is coming soon.</p>
+        <p className="brief-footer">Save this roadmap to open its learning workspace.</p></>}
       </section>
     </div>
   </>;

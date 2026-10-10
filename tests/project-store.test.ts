@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createSessionProjectStore } from "../src/lib/projects/session-store";
 import type { SessionProject } from "../src/lib/projects/store";
+import { emptyActivity } from "../src/lib/domain/learning";
 
 const makeProject = (id: string): SessionProject => ({
   id, createdAt: "2026-10-10T01:00:00.000Z", completedMilestoneIds: [],
@@ -15,6 +16,17 @@ const memoryStorage = () => {
 };
 
 describe("temporary project storage", () => {
+  it("retains milestone work and tutor context across refresh without sharing it between projects", async () => {
+    const storage = memoryStorage();
+    const store = createSessionProjectStore(storage);
+    await store.saveProject({ ...makeProject(firstId), learning: { one: { ...emptyActivity(), work: "Student code", answer: "My explanation", review: { passed: true, feedback: "Correct", nextStep: "Apply it" }, reviewedAnswer: "My explanation", messages: [{ role: "student", text: "Why state?" }, { role: "tutor", text: "State triggers rendering", code: "setCount(count + 1)", nextStep: "Try it" }] } } });
+    await store.saveProject(makeProject(secondId));
+    const reloaded = createSessionProjectStore(storage);
+    expect((await reloaded.loadProject(firstId))?.learning?.one.messages[1].code).toBe("setCount(count + 1)");
+    expect((await reloaded.loadProject(firstId))?.learning?.one.answer).toBe("My explanation");
+    expect((await reloaded.loadProject(secondId))?.learning).toBeUndefined();
+    expect((await reloaded.loadProject(firstId))?.completedMilestoneIds).toEqual([]);
+  });
   it("preserves older goals without treating them as existing knowledge", async () => {
     const project = makeProject(firstId);
     const { existingKnowledge: _knowledge, ...intake } = project.intake;

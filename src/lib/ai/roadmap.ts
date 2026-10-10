@@ -18,7 +18,7 @@ const providerSchema = z.object({
 
 // Gemini accepts a subset of schema keywords. Keep full constraints in Zod,
 // while sending only supported shape keywords to the provider.
-function providerSchemaShape(value: Record<string, unknown>): Record<string, unknown> {
+export function providerSchemaShape(value: Record<string, unknown>): Record<string, unknown> {
   const allowed = ["type", "description", "enum", "required"];
   const result: Record<string, unknown> = {};
   for (const key of allowed) if (value[key] !== undefined) result[key] = value[key];

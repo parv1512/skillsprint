@@ -156,3 +156,79 @@ Phase 3 starts after the Phase 2 review. Commit/push proposals require the owner
 - Kept hours as the effort budget and renamed its label to Time available to build. Days would require a separate deadline or daily availability to be useful.
 - Older session projects remain readable; original goals are preserved and never reinterpreted as existing knowledge.
 - Tests: 32 passed, live test skipped. Verified the new field in the browser; no new paid generation request was made.
+
+## Phase 3: guided learning and copilot
+
+Owner approved Phase 3 after committing the UI/intake changes as `5c55c4b`. This commit has not been pushed.
+
+### Approved decisions
+
+- Student-confirmed milestone completion; AI knowledge checks remain separate from completion.
+- Ordinary tutoring uses low reasoning on Gemini 3; lessons, assessments, and full solutions keep the model default. Source: https://ai.google.dev/gemini-api/docs/generate-content/thinking.
+- Existing session storage remains behind ProjectStore. No auth/database/evidence thresholds have been introduced in this phase.
+
+### Implemented
+
+- Per-milestone Learn / Your work / Copilot tabs, keyboard navigation, scoped lessons, explanations, worked code examples, and official references.
+- On-demand structured Gemini lesson generation and session reuse; no request is made merely by opening a milestone.
+- Practical tasks, saved code/notes, criterion confirmations, open-ended knowledge checks with explicit AI review, and separate assessment results. Editing an answer clears the previous review.
+- Hint-first copilot with explanations, debugging, snippet review, small examples, and an explicit full-solution mode. Current work and at most 12 recent messages are context. Code is displayed as text and never executed.
+- Student-confirmed progress checks criteria and prerequisites, records a confirmation timestamp, and supports reopening without dropping work. A lesson or AI check alone never completes a task or awards Passport mastery.
+- Bounded input/output, origin checks, timeouts, safe errors, no automatic paid retries, and production AI endpoints disabled pending Auth0.
+
+### Files
+
+Created: `src/lib/domain/learning.ts`, `src/lib/ai/learning.ts`, `src/lib/server/learning-handler.ts`, `src/lib/projects/progress.ts`, `src/app/api/learning/route.ts`, `src/components/learning-workspace.tsx`, `tests/learning.test.ts`.
+
+Modified: `src/lib/ai/roadmap.ts`, `src/lib/projects/store.ts`, `src/components/project-roadmap.tsx`, `src/components/roadmap-view.tsx`, `src/app/studio.css`, `tests/project-store.test.ts`, `README.md`, `docs/ARCHITECTURE.md`, `docs/BUILD_STATUS.md`, and generated `next-env.d.ts`.
+
+### Phase 3 verification
+
+- 45 offline tests passed; opt-in roadmap live test skipped.
+- Real Gemini lesson generated; an intentionally incorrect knowledge-check answer was rejected with feedback.
+- Real hint request succeeded after the approved reasoning change. Earlier default-reasoning tutor requests timed out; input remained visible and retryable.
+- A stale Next development module initially used old intake validation; restarting the development server fixed it. Existing saved roadmap remained intact.
+- No actual student project code was executed or claimed to work. Browser test notes are explicitly labeled as verification samples.
+
+- Real progressive hints used the prior attempt; full-solution mode returned the requested interface with an explanation. Ordinary hint requests completed in roughly 2–3 seconds after the approved reasoning change; the default full solution took roughly 48 seconds. These are observed samples, not latency guarantees.
+- A correct explanation passed the live AI check after one transient provider failure; its answer remained intact for manual retry. Incorrect and correct answers were tested separately.
+- Browser completion changed progress to 1/3 and unlocked the next milestone; reopening restored 0/3. Criterion confirmations were cleared afterward. This was a UI verification action, not evidence that the student project was executed.
+- Refresh retained the lesson, notes, correct-answer review, and tutoring conversation. A second milestone had empty work and completion remained blocked by prerequisites.
+- Desktop and mobile Learn/Your work/Copilot layouts inspected. At 390px the document had no horizontal overflow; code blocks can scroll internally. Arrow-key navigation between workspace tabs passed.
+- Final production build and typecheck passed. No additional dependency was introduced.
+- Screenshots: docs/screenshots/phase-3-lesson.png, phase-3-copilot.png, and phase-3-copilot-mobile.png.
+
+### Phase 3 acceptance
+
+| Criterion | Result |
+| --- | --- |
+| Milestone explanations, example, and references (MVP 4) | Passed locally |
+| Context-aware hint-first copilot and explicit solution (MVP 5) | Passed with real Gemini responses |
+| Saved practical work and separate knowledge checks (MVP 6) | Passed locally; completion is student-confirmed |
+| Loading, error, retry, and refresh recovery (MVP 13) | Passed for tested flows; full authenticated flow still pending |
+| Persistent evidence, Passport, cross-project reuse (MVP 7–10) | Pending Phase 4/5 |
+| Authentication, server ownership, deployment (MVP 1, 12, 14) | Pending Phase 4/6 |
+
+The local workspace now completes MVP 2–6. No Passport skills or real execution evidence are fabricated. AI assessment judgments remain model judgments, not a verified sandbox test. Skill evidence mapping still requires review in Phase 4.
+
+Phase 3 work is ready for review and remains uncommitted. Commit 5c55c4b is local; no new push was authorized. Run npm run dev and open an existing project to try the workspace; npm test, npm run typecheck, and npm run build verify it. Phase 4 requires owner approval before starting.
+
+## Approved learning approach: starter files plus guided milestones
+
+The owner chose a starter structure and small initial implementation followed by meaningful student work. Phase 3 now includes starter generation in the first milestone's Learn tab, file purposes and code, copy controls, setup instructions, a first modification task, and a ZIP download. Later project features stay with the milestone tasks; full solutions remain an explicit tutor choice.
+
+The starter is sent as context for later learning assistance. Generating, copying, downloading, or reading a starter does not complete a milestone or award skill evidence. Generated code is labeled as not executed or tested by SkillSprint. No new dependency, account, service, or automatic code execution was introduced. Phase 4 has not started.
+
+New files: src/lib/domain/starter.ts, src/lib/projects/starter-archive.ts, src/components/starter-files.tsx, tests/starter.test.ts. Updated learning schema/service/workspace, studio.css, README.md, ARCHITECTURE.md, and this status file.
+
+Verification:
+- 50 offline tests passed; 1 opt-in roadmap live test skipped. Typecheck and production build passed.
+- Real Gemini generation produced an eight-file React/TypeScript starter with a static screen and TODO form controls. Its first task asks the student to extend typed sample data. No application state, filtering, or persistence was generated.
+- The initial 55-second request timed out safely. Starter generation now has a 120-second server timeout and a 130-second client timeout, with an explicit loading message. A manually retried request succeeded. Ordinary lesson/tutor limits are unchanged.
+- Browser file selection and Copy file worked. The actual ZIP downloaded to the browser's Downloads location and was read successfully with the Windows ZIP library; all eight relative file paths were present. An independent archive fixture was also verified with the system reader.
+- Refresh retained the starter, previous lesson, and 0/3 completed progress.
+- Desktop and 390px mobile layouts inspected; no document horizontal overflow at the mobile size. Code scrolls inside its container.
+- Screenshots: docs/screenshots/starter-files-desktop.png and starter-files-mobile.png.
+- Starter app code was not installed, executed, or tested. The checks validate SkillSprint's generation, storage, interface, and archive handling.
+
+Phase 3 and the starter-files flow are included in the local checkpoint commit requested by the owner. Verification is recorded above. No push was authorized, and Phase 4 has not started. The current preview is running on http://127.0.0.1:3000.
