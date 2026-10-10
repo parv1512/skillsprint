@@ -1,0 +1,30 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { Icon } from "./icon";
+
+const navigation = [
+  { href: "/", label: "Overview", icon: "grid" as const },
+  { href: "/projects", label: "My projects", icon: "code" as const },
+  { href: "/passport", label: "Learning Passport", icon: "book" as const },
+];
+
+export function AppShell({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  return <div className="app-shell">
+    <a href="#main-content" className="skip-link">Skip to content</a>
+    <aside className="sidebar">
+      <Link href="/" className="brand" aria-label="SkillSprint home"><span className="brand-mark"><Icon name="spark" /></span>SkillSprint<span className="brand-dot">.</span></Link>
+      <p className="nav-label">YOUR WORKSPACE</p>
+      <nav aria-label="Main navigation">{navigation.map((item) => <Link key={item.href} href={item.href} className={`nav-item ${pathname === item.href ? "active" : ""}`} aria-current={pathname === item.href ? "page" : undefined}><Icon name={item.icon} />{item.label}{pathname === item.href && <span className="nav-dot" />}</Link>)}</nav>
+      <div className="sidebar-note"><span className="small-icon"><Icon name="spark" /></span><h2>Small steps. Real skills.</h2><p>Every project is a chance to build something—and build on what you know.</p></div>
+      <div className="workspace-status"><span className="status-dot" /><div><strong>Local workspace</strong><span>Sign-in will be connected next</span></div></div>
+    </aside>
+    <div className="main-column">
+      <header className="topbar"><span>Learn by building</span><span className="topbar-tag"><span className="status-dot" />Your next chapter starts here</span></header>
+      <main id="main-content" tabIndex={-1}>{children}</main>
+      <footer>Built for curious minds. One milestone at a time.</footer>
+    </div>
+  </div>;
+}

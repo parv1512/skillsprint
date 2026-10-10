@@ -1,0 +1,5 @@
+import { Icon } from "@/components/icon";
+
+export default function PassportPage() {
+  return <><div className="page-heading"><div><p className="eyebrow">KNOWLEDGE THAT GOES WITH YOU</p><h1>Your Learning Passport</h1><p className="subtitle">A record of what you’ve demonstrated, across everything you build.</p></div><span className="outline-pill">0 skills recorded</span></div><section className="passport-banner"><Icon name="book" width="40" height="40" /><div><h2>Your learning doesn’t start over.</h2><p>Build evidence in one project. Carry it into the next. Choose to skip an introduction, review it, or take a refresher—while still completing your new project’s practical tasks.</p></div></section><section className="panel"><div className="empty-state"><span className="empty-icon"><Icon name="shield" width="28" height="28" /></span><h3>A Passport built on practice</h3><p>No skills have been recorded yet. Lessons alone won’t earn mastery. Your Passport will grow with practical work and demonstrated understanding.</p></div></section><p className="quiet-note">Learning evidence and persistence will be connected in a later build phase.</p></>;
+}
