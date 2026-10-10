@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { skillIds } from "./skills";
 
 export const skillIdSchema = z.string().regex(/^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$/, "Use a canonical skill identifier.");
 export const skillStatusSchema = z.enum(["new", "practiced", "mastered"]);
@@ -35,6 +36,7 @@ export const milestoneSchema = z.object({
 export const roadmapSchema = z.object({
   title: z.string().trim().min(1).max(160),
   summary: text,
+  scopeNotes: z.string().trim().max(2000).default(""),
   milestones: z.array(milestoneSchema).min(1).max(20),
 }).strict().superRefine((roadmap, context) => {
   const seen = new Set<string>();
@@ -45,6 +47,11 @@ export const roadmapSchema = z.object({
     for (const prerequisite of milestone.prerequisiteIds) {
       if (!seen.has(prerequisite)) {
         context.addIssue({ code: "custom", path: ["milestones", index, "prerequisiteIds"], message: "Prerequisites must refer to earlier milestones." });
+      }
+    }
+    for (const skillId of milestone.skillIds) {
+      if (!skillIds.has(skillId)) {
+        context.addIssue({ code: "custom", path: ["milestones", index, "skillIds"], message: "Use a skill from the canonical catalog." });
       }
     }
     seen.add(milestone.id);

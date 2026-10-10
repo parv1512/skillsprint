@@ -4,15 +4,15 @@
 
 Single Next.js App Router application, TypeScript, Tailwind, light learning workspace. Planned integrations: Gemini API, Auth0 Regular Web Application with Universal Login, Tiger Data PostgreSQL with Drizzle.
 
-Owner approved the recommended plan after Phase 0. Credentials, specific Gemini model, deployment platform, database schema, and detailed learning evidence rules remain unconfirmed. No secret values were requested or read.
+Owner approved the recommended plan after Phase 0, then approved Phase 2 and temporary browser-session storage behind a small interface. The Field Notes art direction is approved, retaining the SkillSprint name. The Gemini key is configured locally; model access and generation were verified using `gemini-3.8-flash`. Secret values were never displayed. Deployment, database schema, and detailed learning evidence rules remain unconfirmed.
 
 ## 36-hour working budget
 
 | Phase | Budget | State |
 | --- | ---: | --- |
 | 0: Discovery and decisions | 2h | Repository inspected; recommended plan approved |
-| 1: Foundation | 4h | Implemented; verification recorded below |
-| 2: Project roadmap | 6h | Pending |
+| 1: Foundation | 4h | Verified; local commit dc21373 |
+| 2: Project roadmap | 6h | Implemented and verified; ready for checkpoint commit |
 | 3: Guided learning and copilot | 6h | Pending |
 | 4: Authentication and Passport | 7h | Pending |
 | 5: Cross-project end-to-end flow | 4h | Pending |
@@ -75,18 +75,71 @@ Created:
 
 ## Proposed Git checkpoint
 
-No commit or push has been performed. Proposed commit: `feat: establish SkillSprint application foundation`. After owner approval, stage only the listed Phase 1 files, create the commit, and push to `origin/main` after confirming the remote has not advanced. Never force-push.
+Foundation commit created and verified: `dc21373 feat: establish SkillSprint application foundation`. No push performed. Owner requested a second commit at the Phase 2 checkpoint.
+
+## Phase 2 scope and decisions
+
+- Native server-side Gemini REST integration; configurable model, one request per explicit generation attempt.
+- Small structured provider schema; full application validation still enforces bounded text, arrays, canonical skill membership, milestone prerequisites, and positive estimates within the student's time budget.
+- AI resources are replaced with curated official references from the canonical skill catalog. Model-generated URL verification claims are discarded. Links are labeled as not checked live.
+- Project intake: idea, experience, time, learning goals, optional stack. Missing required fields block submission; validation failures keep the form data.
+- Milestone roadmap with dependency rail, readiness, concepts, practical tasks, acceptance criteria, and a suggested knowledge check.
+- SessionStorage adapter behind `ProjectStore`; no authenticated records or database migrations yet.
+- No completion controls or fabricated learning evidence.
+- Field Notes tokens and dashboard inspected before extending the design. Intake, roadmap, project list, and Passport reviewed on desktop and mobile.
+- The unauthenticated generation endpoint is local-development-only; production requests are refused until Auth0 is implemented.
+
+## Phase 2 verification
+
+- Live model listing confirmed the configured Flash model is accessible.
+- Opt-in live generation test passed and produced a validated study-planner roadmap within a 12-hour budget.
+- Browser intake → live generation → saved project → roadmap passed. The browser roadmap contains 3 ordered milestones, 12 estimated hours, and 0 completed milestones.
+- Refresh retained the project in the same tab. Selecting the second milestone displayed its concepts, tasks, prerequisites, criteria, and assessment prompt.
+- Dashboard, intake, roadmap, project list, and Passport visually inspected at desktop and 390-pixel mobile width. Checked mobile pages had no horizontal overflow.
+- Initial live rejection preserved all form inputs and showed a readable error. Loopback Host/origin mismatch was fixed with a regression test. Provider schema constraints caused a 400 response; simplifying only the provider schema resolved it without removing runtime validation.
+- Automated tests cover malformed output, unknown skills, over-budget plans, API access/quota errors, timeout, network/safety failure, safe errors, corrupt/unavailable storage, and separate project progress.
+- Final `npm test`: 31 passed; 1 opt-in live test skipped by default. The live test was run separately and passed.
+- Final `npm run build` and `npm run typecheck`: passed.
+- Whitespace-only intake was rejected in the browser and focus moved to the idea field; other input values were retained.
+- Dashboard displayed the real generated project and the next milestone, with 0 completed milestones.
+- `git diff --check`: passed. `.env.local` and `.tmp/live-roadmap.json` are ignored. The example environment file was sanitized before committing; the foundation commit was checked and contained no populated Gemini key.
+
+## Phase 2 files
+
+Modified: `.env.example`, `.gitignore`, `package.json`, `package-lock.json`, `README.md`, `docs/BUILD_STATUS.md`, `docs/ARCHITECTURE.md`, generated `next-env.d.ts`, `src/app/layout.tsx`, `src/app/page.tsx`, `src/app/projects/page.tsx`, `src/app/projects/new/page.tsx`, `src/app/passport/page.tsx`, `src/components/app-shell.tsx`, `src/lib/domain/validation.ts`.
+
+Created: `src/app/studio.css`, `src/app/api/roadmaps/route.ts`, `src/app/projects/[id]/page.tsx`, `src/components/project-provider.tsx`, `src/components/studio-dashboard.tsx`, `src/components/project-intake.tsx`, `src/components/roadmap-view.tsx`, `src/components/project-roadmap.tsx`, `src/components/project-list.tsx`, `src/lib/domain/skills.ts`, `src/lib/ai/roadmap.ts`, `src/lib/server/roadmap-handler.ts`, `src/lib/projects/store.ts`, `src/lib/projects/session-store.ts`, `tests/roadmap.test.ts`, `tests/project-store.test.ts`, `tests/gemini.live.test.ts`, `scripts/check-gemini.mjs`, and Phase 2 screenshots under `docs/screenshots`.
+
+Local ignored configuration and live-test output are not committed.
+
+## Phase 2 acceptance and remaining work
+
+| Criterion | State |
+| --- | --- |
+| Project idea intake | Passed |
+| Live structured roadmap generation | Passed |
+| Ordered milestones, dependencies, progress display | Passed; completion actions deferred to evidence-based learning phase |
+| Model errors and malformed responses | Passed through automated tests; live rejection also checked in browser |
+| Temporary session project persistence | Passed |
+| Guided lessons and copilot | Pending Phase 3 |
+| Auth0, Tiger Data, evidence and Passport matching | Pending Phase 4 |
+| Full cross-project demonstration | Pending Phase 5 |
+| Production generation and deployment | Pending authentication and Phase 6 |
+
+MVP criteria 2 and 3 are complete in the local workspace. Criterion 4 is partial (milestone briefs, not guided lessons). Criteria 11, 13, and 14 have supporting foundations but remain partial until end-to-end verification. Criteria 1, 5–10, and 12 remain unfinished.
+
+Second commit planned after checks: `feat: generate personalized project roadmaps with Gemini`. Pushing both commits to `origin/main` requires separate owner approval.
 
 ## MVP acceptance criteria
 
-All 14 end-to-end acceptance criteria remain unfinished at foundation stage. UI and validation foundations support later phases but do not satisfy live project generation, lessons, copilot, evidence, persistence, login, cross-project recognition, ownership enforcement, or deployment.
+The Phase 1 checkpoint had all 14 end-to-end criteria unfinished. Updated Phase 2 states are recorded above; the complete authenticated learning-memory flow is still unfinished.
 
 ## Risks and next priorities
 
 1. Confirm external accounts before integration phases. Configure credentials only in ignored local environment files.
-2. Validate live Gemini output and quota/error behavior in Phase 2.
+2. Live Gemini generation is verified; keep ordinary tests offline and run paid live tests only deliberately.
 3. Review learning evidence and schema before Phase 4; never infer mastery from lesson views.
 4. Integrate identity and ownership before exposing student data.
 5. Verify Project A → Passport → Project B before polishing the demo.
 
-Phase 2 starts after the Phase 1 review. Commit/push proposals require the owner's explicit push approval.
+Phase 3 starts after the Phase 2 review. Commit/push proposals require the owner's explicit push approval.

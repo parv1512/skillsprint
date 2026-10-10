@@ -12,19 +12,19 @@ const navigation = [
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  return <div className="app-shell">
+  return <div className="app-shell field-notes">
     <a href="#main-content" className="skip-link">Skip to content</a>
     <aside className="sidebar">
       <Link href="/" className="brand" aria-label="SkillSprint home"><span className="brand-mark"><Icon name="spark" /></span>SkillSprint<span className="brand-dot">.</span></Link>
       <p className="nav-label">YOUR WORKSPACE</p>
       <nav aria-label="Main navigation">{navigation.map((item) => <Link key={item.href} href={item.href} className={`nav-item ${pathname === item.href ? "active" : ""}`} aria-current={pathname === item.href ? "page" : undefined}><Icon name={item.icon} />{item.label}{pathname === item.href && <span className="nav-dot" />}</Link>)}</nav>
-      <div className="sidebar-note"><span className="small-icon"><Icon name="spark" /></span><h2>Small steps. Real skills.</h2><p>Every project is a chance to build something—and build on what you know.</p></div>
-      <div className="workspace-status"><span className="status-dot" /><div><strong>Local workspace</strong><span>Sign-in will be connected next</span></div></div>
+      <div className="sidebar-note"><span className="nav-label">THE BUILDING METHOD</span><h2>Make. Understand.<br />Carry it forward.</h2><p>The work is yours. The guidance helps you take the next step.</p></div>
+      <div className="workspace-status"><span className="status-dot" /><div><strong>Temporary workspace</strong><span>Projects stay in this tab’s session</span></div></div>
     </aside>
     <div className="main-column">
-      <header className="topbar"><span>Learn by building</span><span className="topbar-tag"><span className="status-dot" />Your next chapter starts here</span></header>
+      <header className="topbar"><span>THE LEARNING STUDIO</span><span className="topbar-tag">Projects / Practice / Progress</span></header>
       <main id="main-content" tabIndex={-1}>{children}</main>
-      <footer>Built for curious minds. One milestone at a time.</footer>
+      <footer>SkillSprint &nbsp; / &nbsp; Learn something. Build with it.</footer>
     </div>
   </div>;
 }
