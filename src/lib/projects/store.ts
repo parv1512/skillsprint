@@ -21,6 +21,10 @@ export const sessionProjectSchema = z.object({
     if (!milestone || new Set(activity.checkedCriteria).size !== activity.checkedCriteria.length || activity.checkedCriteria.some((index) => index >= milestone.acceptanceCriteria.length)) {
       context.addIssue({ code: "custom", path: ["learning", id], message: "Learning work must reference this milestone and its criteria." });
     }
+    const steps = activity.lesson?.guidedSteps ?? [];
+    if (new Set(steps.map(step => step.id)).size !== steps.length || new Set(activity.completedStepIds).size !== activity.completedStepIds.length || activity.completedStepIds.some((stepId, index) => steps[index]?.id !== stepId)) {
+      context.addIssue({code: "custom", path: ["learning", id, "completedStepIds"], message: "Confirm guided steps in order from the saved lesson."});
+    }
   }
   if (new Set(project.completedMilestoneIds).size !== project.completedMilestoneIds.length || project.completedMilestoneIds.some((id) => !ids.has(id))) {
     context.addIssue({ code: "custom", path: ["completedMilestoneIds"], message: "Completion records must reference unique milestones in this project." });

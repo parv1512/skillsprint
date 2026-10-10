@@ -9,7 +9,7 @@ const first={id:"one",title:"React state",outcome:"Add a task",skillIds:["react.
 const roadmap={title:"Planner",summary:"Build a planner",scopeNotes:"",milestones:[first,{...first,id:"two",prerequisiteIds:["one"]}]};
 const input=learningRequestSchema.parse({action:"tutor",intake,roadmap,milestoneId:"one",mode:"hint",question:"Tasks vanish after adding. Help?"});
 const reply={explanation:"Consider how React knows when to render.",code:"",nextStep:"Try storing tasks in state."};
-const lesson={sections:[{title:"State",explanation:"State preserves data between renders."}],example:{language:"tsx",code:"const [tasks, setTasks] = useState<string[]>([]);",explanation:"The setter triggers a render."},knowledgeCheck:"Why doesn't assigning a local variable trigger a render?"};
+const lesson={sections:[{title:"State",explanation:"State preserves data between renders."}],example:{language:"tsx",code:"const [tasks, setTasks] = useState<string[]>([]);",explanation:"The setter triggers a render."},knowledgeCheck:"Why doesn't assigning a local variable trigger a render?",guidedSteps:[{id:"create-state",title:"Create task state",filePath:"src/App.tsx",concept:"State preserves tasks between renders.",instruction:"Add task state inside App, before return.",exampleCode:"const [count, setCount] = useState(0);",expectedResult:"An empty task list renders.",verification:"Open the app and confirm the empty list.",reflection:"Why use state?"},{id:"append-task",title:"Append a task",filePath:"src/App.tsx",concept:"Immutable updates trigger rendering.",instruction:"Use the setter to append your new task.",exampleCode:"",expectedResult:"The added task appears.",verification:"Add two tasks; check both remain visible.",reflection:"Why create a new array?"}]};
 const response=(value:unknown,finishReason="STOP")=>new Response(JSON.stringify({candidates:[{finishReason,content:{parts:[{text:JSON.stringify(value)}]}}]}));
 const options=(fetcher:typeof fetch)=>({apiKey:"test-key",model:"gemini-test",fetcher});
 const project=()=>sessionProjectSchema.parse({id:"00000000-0000-4000-8000-000000000001",createdAt:"2026-10-10T01:00:00Z",intake,roadmap,completedMilestoneIds:[]});
@@ -41,6 +41,13 @@ describe("learning assistance",()=>{
   expect(await generateLearning({...input,action:"lesson"},options(fetcher))).toEqual(lesson);
   expect(String(fetcher.mock.calls[0][0])).not.toContain("test-key");
   expect((fetcher.mock.calls[0][1]?.headers as Record<string,string>)["x-goog-api-key"]).toBe("test-key");
+ });
+ it("omits oversized optional step examples without truncating code or accepting invalid instructions",async()=>{
+  const oversized={...lesson,guidedSteps:[{...lesson.guidedSteps[0],exampleCode:Array(12).fill("const example = 1;").join("\n")},lesson.guidedSteps[1]]};
+  const result=await generateLearning({...input,action:"lesson"},options(vi.fn<typeof fetch>().mockResolvedValue(response(oversized))));
+  expect(lessonSchema.parse(result).guidedSteps[0].exampleCode).toBe("");
+  expect(lessonSchema.parse(result).guidedSteps[0].instruction).toBe(lesson.guidedSteps[0].instruction);
+  await expect(generateLearning({...input,action:"lesson"},options(vi.fn<typeof fetch>().mockResolvedValue(response({...oversized,guidedSteps:[{...oversized.guidedSteps[0],filePath:"../private"},oversized.guidedSteps[1]]}))))).rejects.toMatchObject({code:"INVALID_RESPONSE"});
  });
  it("rejects unfinished, malformed and oversized hint replies",async()=>{
   await expect(generateLearning(input,options(vi.fn<typeof fetch>().mockResolvedValue(response(reply,"MAX_TOKENS"))))).rejects.toMatchObject({code:"INCOMPLETE"});

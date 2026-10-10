@@ -100,6 +100,24 @@ describe("authenticated workspace and evidence", () => {
   it("never equates reading or a check alone with practical mastery", () => {
     expect(evidenceStatus([])).toBe("new"); expect(evidenceStatus([{kind: "ai-check"}])).toBe("new"); expect(evidenceStatus([{kind: "student-work"}])).toBe("practiced"); expect(evidenceStatus([{kind: "student-work"}, {kind: "ai-check"}])).toBe("mastered");
   });
+  it("uses persisted reuse choices for lessons without changing practical progress", async () => {
+    const deps = dependencies();
+    const priorProjectId = "00000000-0000-4000-8000-000000000003";
+    const passport = vi.fn<WorkspaceRepository["passport"]>().mockResolvedValue([{
+      skillId: "react.state", status: "practiced", preference: "skip", lastDemonstratedAt: null,
+      evidence: [{id: checkId, projectId: priorProjectId, milestoneId: "first", skillId: "react.state", kind: "student-work", snapshot: "Prior practical work", createdAt: "2026-10-10T01:00:00Z", projectTitle: "Project A"}],
+    }]);
+    deps.repo.passport = passport;
+    deps.generate.mockResolvedValue({sections: [{title: "Apply state", explanation: "Use your prior knowledge for the new task."}], example: {language: "javascript", code: "setCount(n => n + 1)", explanation: "Update from prior state."}, knowledgeCheck: "Why use a setter?"});
+    expect((await handleWorkspace(request({projectId, milestoneId: "one", action: "lesson"}), "learning", deps)).status).toBe(200);
+    expect(deps.generate.mock.calls[0][0].skipSkillIds).toEqual(["react.state"]);
+    const [record] = await passport();
+    passport.mockResolvedValue([{...record, preference: "review"}]);
+    expect((await handleWorkspace(request({projectId, milestoneId: "one", action: "lesson"}), "learning", deps)).status).toBe(200);
+    expect(deps.generate.mock.calls[1][0].skipSkillIds).toEqual([]);
+    expect(deps.repo.saveProject).not.toHaveBeenCalled();
+    expect(deps.repo.saveGenerated.mock.calls.every(call => !Object.hasOwn(call[3] ?? {}, "completionConfirmedAt"))).toBe(true);
+  });
   it("enforces certificate-verified remote TLS without exposing credentials", () => {
     const url = new URL(normalizeDatabaseUrl("postgres://user:test@db.example:5432/db?sslmode=disable&ssl=false&uselibpqcompat=true"));
     expect(url.searchParams.get("sslmode")).toBe("verify-full"); expect(url.searchParams.has("ssl")).toBe(false); expect(url.searchParams.has("uselibpqcompat")).toBe(false);

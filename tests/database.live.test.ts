@@ -90,4 +90,21 @@ describe.skipIf(!enabled)("Tiger Data persistence and ownership (isolated synthe
     const saved = (await a.loadProject(third))!; await a.saveProject(saved);
     expect((await a.passport())[0].evidence.filter(item => item.projectId === third)).toHaveLength(1);
   }, 30000);
+  it("persists guided position with the authoritative plan and awards no evidence for confirmations alone", async () => {
+    const guidedId = randomUUID(); await a.saveProject({...input, id: guidedId});
+    const current = (await a.loadProject(guidedId))!;
+    const step = {id: "first-edit", title: "Synthetic edit", filePath: "src/App.jsx", concept: "Fixture explanation", instruction: "Synthetic fixture; no real student task", exampleCode: "", expectedResult: "Fixture result", verification: "Fixture check", reflection: "Fixture question"};
+    await a.saveGenerated(guidedId, "one", current.revision, {lesson: {sections: [{title: "Fixture", explanation: "Synthetic lesson"}], example: {language: "jsx", code: "// fixture", explanation: "Not executed"}, knowledgeCheck: "Fixture question", guidedSteps: [step, {...step, id: "second-edit"}]}});
+    const plan = (await a.loadProject(guidedId))!;
+    const before = (await a.passport())[0].evidence.length;
+    await a.saveProject({...plan, learning: {one: {...plan.learning!.one, setupConfirmed: true, completedStepIds: [step.id]}}});
+    const reloaded = await repositoryFor(subjects[0]);
+    const saved = (await reloaded.loadProject(guidedId))!;
+    expect(saved.learning!.one.setupConfirmed).toBe(true);
+    expect(saved.learning!.one.completedStepIds).toEqual([step.id]);
+    expect(saved.completedMilestoneIds).toEqual([]);
+    expect((await a.passport())[0].evidence).toHaveLength(before);
+    await expect(a.saveProject({...saved, learning: {one: {...saved.learning!.one, lesson: {...saved.learning!.one.lesson!, guidedSteps: [{...step, id: "forged"}]}, completedStepIds: ["forged"]}}})).rejects.toMatchObject({status: 400});
+    expect((await a.loadProject(guidedId))!.learning!.one.completedStepIds).toEqual([step.id]);
+  }, 30000);
 });

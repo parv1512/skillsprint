@@ -4,7 +4,7 @@ Build real projects, learn with guidance, and carry demonstrated skills into you
 
 ## Current state
 
-Phase 4 implementation: Auth0 Universal Login, authenticated Tiger Data storage through Drizzle, Passport evidence, targeted skill checks, and canonical cross-project recognition now join the Gemini roadmap and guided learning workspace. The approved Field Notes design keeps the interface focused and concise. Live verification status is recorded in `docs/BUILD_STATUS.md`.
+Phase 5 verifies the signed-in Project A → Passport → Project B flow using two native Gemini-generated roadmaps, real lessons and copilot help, persisted reuse choices, practical evidence, and a passed targeted refresher. The approved Field Notes design keeps the interface focused and concise. Follow [the repeatable demo guide](docs/PHASE_5_DEMO.md); verification results and provider limitations are recorded in `docs/BUILD_STATUS.md`.
 
 Student-confirmed completion and AI-reviewed explanations are separate records. Practiced requires a saved practical submission and completion confirmation. Mastered additionally requires a passed check targeting the same canonical skill. Neither lesson views nor a tutor reply awards skill mastery. Code snippets are not executed by SkillSprint.
 
@@ -17,7 +17,7 @@ npm ci
 npm run dev
 ```
 
-Open http://127.0.0.1:3000. Copy `.env.example` to `.env.local`, configure Auth0 and DATABASE_URL using [the setup guide](docs/PHASE_4_SETUP.md), and set GEMINI_API_KEY and an account-accessible GEMINI_MODEL (default: gemini-3.7-flash). Never paste secrets into chat or commit environment files. The shell opens without credentials, but all storage and AI endpoints require sign-in.
+Open http://127.0.0.1:3000. Copy `.env.example` to `.env.local`, configure Auth0 and DATABASE_URL using [the setup guide](docs/PHASE_4_SETUP.md), and set GEMINI_API_KEY and an account-accessible GEMINI_MODEL (default: gemini-3.5-flash-lite). Never paste secrets into chat or commit environment files. The shell opens without credentials, but all storage and AI endpoints require sign-in.
 
 Signed-in projects use Tiger Data PostgreSQL. Existing browser-session projects are preserved and can be explicitly imported into your account; historical AI reviews and completion reset during import and do not become trusted Passport evidence. Without Auth0 configuration, existing session projects are viewable but new saves and AI calls are refused.
 
@@ -49,12 +49,15 @@ Ordinary help and knowledge checks use low reasoning on the approved Flash model
 ## Try the learning workspace
 
 1. Create or open a project and select a milestone.
-2. In the first milestone’s **Learn** tab, choose **Create starter files** for a minimal file structure, code, setup steps, and a first task. Inspect the files or download the ZIP to use in your editor. Generated starters have not been executed by SkillSprint and leave project features for you to implement. Choose **Create lesson** for guidance. This makes one Gemini request; the lesson is saved for reuse.
-3. In **Your work**, follow the tasks, paste code or notes, and save. Confirm each criterion to mark the milestone complete. Prerequisites must be completed first. Completion is student-confirmed; the knowledge check is independent.
-4. Answer the check and choose **Check understanding** for an explicitly labeled AI review. Editing the answer clears the previous review.
-5. In **Copilot**, ask for a hint, explanation, debugging help, code review, or a short example. **Full solution** is an explicit mode. Current work and up to 12 recent messages are sent as context.
+2. In **Build**, get starter files, extract the ZIP, open the folder in your editor, and follow the setup instructions. Supported files display as indented multiline code with line numbers; copied and downloaded source uses the same formatting. SkillSprint does not execute the generated code.
+3. Create or preview building steps. Follow one precise edit at a time: the file to change, the concept, expected result, and how to check it. Step-specific hint/explanation/review controls prepare contextual copilot questions. Save an attempt and confirm changes to keep your place. Read [the guided workspace guide](docs/GUIDED_BUILD.md) for old-project compatibility and formatting limits.
+4. In **Your work**, review the original tasks, saved code/notes, and criteria. Confirm each criterion to mark the milestone complete. Prerequisites must be completed first. Setup and guided-step confirmations do not complete milestones or award mastery.
+5. Answer the check and choose **Check understanding** for an explicitly labeled AI review. Editing the answer clears the previous review.
+6. In **Copilot**, ask for a hint, explanation, debugging help, code review, or a short example. **Full solution** is an explicit mode. Current work and up to 12 recent messages are sent as context.
 
 Use **Save work** before navigating away. Saved lessons, work, assessments, conversations, and progress persist in your signed-in account. In **Your work → Passport skill check**, choose a specific skill to demonstrate understanding. The general milestone check is feedback rather than evidence for every skill. Passport records link to supporting projects. Known skills offer skip/review/refresher choices; practical progress in each project stays independent.
+
+After switching from Skip to Review, use **Create review lesson** to explicitly request fresh guidance, including previously practiced topics. Switching preferences makes no automatic Gemini request. Reload a second open tab to see work saved in another tab. The retained Phase 5 demonstration submissions are labeled Codex-written samples and are not claims about the account owner's learning.
 
 ## Structure
 

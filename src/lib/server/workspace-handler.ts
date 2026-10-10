@@ -66,7 +66,7 @@ export async function handleWorkspace(request: Request, operation: "projects" | 
       const aiInput = learningRequestSchema.parse({...context(project, input.milestoneId), ...details, skipSkillIds, knowledgeCheck: activity.lesson?.knowledgeCheck ?? milestone.assessmentPrompt, history: activity.messages});
       const result = await dependencies.generate(aiInput);
       let update = {};
-      if (input.action === "lesson") update = {lesson: lessonSchema.parse(result), review: null, reviewedAnswer: ""};
+      if (input.action === "lesson") update = {lesson: lessonSchema.parse(result), review: null, reviewedAnswer: "", completedStepIds: []};
       if (input.action === "starter") update = {starter: starterSchema.parse(result)};
       if (input.action === "check") update = {review: reviewSchema.parse(result), answer: input.answer, reviewedAnswer: input.answer};
       if (input.action === "tutor") { const reply = tutorReplySchema.parse(result); update = {messages: [...activity.messages, {role: "student", text: `${input.mode}: ${input.question}`}, {role: "tutor", text: reply.explanation, code: reply.code, nextStep: reply.nextStep}].slice(-12)}; }

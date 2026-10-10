@@ -1,13 +1,29 @@
 import { z } from "zod";
 import { projectIntakeSchema, roadmapSchema } from "./validation";
-import { starterSchema } from "./starter";
+import { starterSchema, starterPathSchema } from "./starter";
 
 const text = z.string().trim().min(1).max(4000);
+export const guidedStepSchema = z.object({
+  id: z.string().regex(/^[a-z][a-z0-9-]{0,59}$/),
+  title: z.string().trim().min(1).max(120),
+  filePath: starterPathSchema,
+  concept: z.string().trim().min(1).max(700).describe("Explain the concept and why this edit matters in 2-3 short beginner-friendly sentences, not just a topic label."),
+  instruction: z.string().trim().min(1).max(1200),
+  exampleCode: z.string().max(1200).describe("Use an empty string or a small 1-6 line illustration. Never include a whole component or the complete task solution.").refine(code => code.trim().split("\n").length <= 8, "Keep guided examples to eight lines."),
+  expectedResult: z.string().trim().min(1).max(600),
+  verification: z.string().trim().min(1).max(700),
+  reflection: z.string().trim().min(1).max(500),
+}).strict();
 export const lessonSchema = z.object({
   sections: z.array(z.object({ title: z.string().min(1).max(160), explanation: text }).strict()).min(1).max(5),
   example: z.object({ language: z.string().max(40), code: z.string().min(1).max(8000), explanation: text }).strict(),
   knowledgeCheck: z.string().min(1).max(2000),
+  // Saved lessons from earlier checkpoints remain readable.
+  guidedSteps: z.array(guidedStepSchema).max(8).default([]),
 }).strict();
+export const guidedLessonSchema = lessonSchema.extend({guidedSteps: z.array(guidedStepSchema).min(2).max(8)}).superRefine((lesson, ctx) => {
+  if (new Set(lesson.guidedSteps.map(step => step.id)).size !== lesson.guidedSteps.length) ctx.addIssue({code: "custom", path: ["guidedSteps"], message: "Use unique step identifiers."});
+});
 export const reviewSchema = z.object({ passed: z.boolean(), feedback: text, nextStep: text }).strict();
 export const tutorReplySchema = z.object({ explanation: text, code: z.string().max(8000), nextStep: text }).strict();
 export const tutorModeSchema = z.enum(["hint", "explain", "debug", "review", "example", "solution"]);
@@ -45,10 +61,13 @@ export const learningActivitySchema = z.object({
   checkedCriteria: z.array(z.number().int().min(0).max(14)).max(15).default([]),
   messages: z.array(tutorMessageSchema).max(12).default([]),
   completionConfirmedAt: z.iso.datetime().nullable().default(null),
+  setupConfirmed: z.boolean().default(false),
+  completedStepIds: z.array(z.string().min(1).max(60)).max(8).default([]),
 }).strict();
 export type LearningActivity = z.infer<typeof learningActivitySchema>;
 export type LearningRequest = z.infer<typeof learningRequestSchema>;
 export type Lesson = z.infer<typeof lessonSchema>;
+export type GuidedStep = z.infer<typeof guidedStepSchema>;
 export type TutorMode = z.infer<typeof tutorModeSchema>;
 export type TutorReply = z.infer<typeof tutorReplySchema>;
 export type KnowledgeReview = z.infer<typeof reviewSchema>;

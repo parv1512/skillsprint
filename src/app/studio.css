@@ -137,3 +137,23 @@ body { font-family: var(--font-ui); }
 .skill-reuse ul { padding-left: 1.2rem; }
 .skill-reuse li { margin: .7rem 0; }
 @media (max-width: 700px) { .passport-record-heading { flex-direction: column; } }
+.guided-build { padding: 8px 0 26px; border-bottom: 1px solid var(--line); margin-bottom: 24px; }
+.learning-workspace .guided-build h3 { font: 400 26px/1.25 var(--font-heading); margin: 12px 0; }
+.guided-build p, .guided-build li { font-size: 13px; line-height: 1.8; color: var(--muted); white-space: pre-wrap; }
+.guided-build .text-link { border: 0; background: transparent; color: var(--green); padding: 6px 0; cursor: pointer; text-align: left; }
+.guided-step-heading { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+.guided-step-heading .eyebrow { margin: 0; }
+.guided-edit { border-left: 2px solid var(--green); padding: 5px 0 5px 16px; margin: 24px 0; }
+.guided-edit code { font: 12px/1.7 var(--font-code); color: var(--ink); text-transform: none; overflow-wrap: anywhere; }
+.guided-result { padding: 0 0 12px; }
+.guided-result h4 { font-size: 12px; margin: 18px 0 6px; }
+.guided-reflection, .guided-example, .guided-history, .guided-attempt, .guided-setup, .concept-notes { margin: 20px 0; }
+.guided-reflection summary, .guided-example summary, .guided-history summary, .guided-attempt summary, .guided-setup summary, .concept-notes summary { font-size: 12px; cursor: pointer; color: var(--green); }
+.guided-build .workspace-actions { margin: 20px 0; }
+.guided-next { padding-top: 10px; }
+.guided-next .quiet-note { font-size: 11px; }
+.guided-attempt .form-field { margin-top: 20px; }
+.starter-code { white-space: pre; max-height: 440px; tab-size: 2; }
+.code-line { display: grid; grid-template-columns: 3ch max-content; gap: 16px; min-height: 1.8em; }
+.line-number { color: var(--muted); text-align: right; user-select: none; border-right: 1px solid var(--line); padding-right: 8px; }
+@media(max-width:600px) { .guided-step-heading { flex-wrap: wrap; }.learning-workspace .guided-build h3 { font-size: 24px; }.code-line { gap: 10px; } }

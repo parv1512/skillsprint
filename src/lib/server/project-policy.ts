@@ -10,7 +10,7 @@ export function applyStudentSave(current: SessionProject, submitted: SessionProj
   for (const milestone of current.roadmap.milestones) {
     const prior = current.learning?.[milestone.id] ?? emptyActivity();
     const draft = submitted.learning?.[milestone.id];
-    if (draft) next.learning![milestone.id] = { ...prior, work: draft.work, answer: draft.answer, checkedCriteria: draft.checkedCriteria };
+    if (draft) next.learning![milestone.id] = { ...prior, work: draft.work, answer: draft.answer, checkedCriteria: draft.checkedCriteria, setupConfirmed: draft.setupConfirmed, completedStepIds: draft.completedStepIds };
   }
   // Reverse order makes reopening dependent milestones safe.
   for (const milestone of current.roadmap.milestones) {
