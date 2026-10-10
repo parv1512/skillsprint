@@ -50,7 +50,7 @@ export function ProjectIntakeForm() {
       if (!response.ok) throw new Error(typeof body.error === "string" ? body.error : "Couldn’t create your roadmap. Please try again.");
       const roadmap = roadmapSchema.safeParse(body.roadmap);
       if (!roadmap.success) throw new Error("The roadmap couldn’t be read safely. Please try again.");
-      const project: SessionProject = { id: crypto.randomUUID(), intake: input.data, roadmap: roadmap.data, completedMilestoneIds: [], createdAt: new Date().toISOString() };
+      const project: SessionProject = { id: crypto.randomUUID(), revision: 0, intake: input.data, roadmap: roadmap.data, completedMilestoneIds: [], createdAt: new Date().toISOString() };
       setGenerated(project);
       await save(project);
     } catch (cause) {

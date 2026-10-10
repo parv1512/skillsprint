@@ -4,7 +4,7 @@ import type { SessionProject } from "../src/lib/projects/store";
 import { emptyActivity } from "../src/lib/domain/learning";
 
 const makeProject = (id: string): SessionProject => ({
-  id, createdAt: "2026-10-10T01:00:00.000Z", completedMilestoneIds: [],
+  id, revision: 0, createdAt: "2026-10-10T01:00:00.000Z", completedMilestoneIds: [],
   intake: { idea: "Build a study planner", experience: "beginner", availableHours: 10, existingKnowledge: "Basic HTML and CSS" },
   roadmap: { title: "Planner", summary: "Build a planner", scopeNotes: "", milestones: [{ id: "one", title: "First task", outcome: "Add inputs", skillIds: ["react.state"], prerequisiteIds: [], tasks: ["Add inputs"], resources: [], estimatedHours: 2, acceptanceCriteria: ["Inputs work"], assessmentPrompt: "Explain state" }] },
 });

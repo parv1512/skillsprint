@@ -13,7 +13,9 @@ export const tutorReplySchema = z.object({ explanation: text, code: z.string().m
 export const tutorModeSchema = z.enum(["hint", "explain", "debug", "review", "example", "solution"]);
 export const tutorMessageSchema = z.object({ role: z.enum(["student", "tutor"]), text: z.string().min(1).max(16000), code: z.string().max(8000).optional(), nextStep: z.string().max(4000).optional() }).strict();
 export const learningRequestSchema = z.object({
-  action: z.enum(["lesson", "tutor", "check", "starter"]),
+  action: z.enum(["lesson", "tutor", "check", "starter", "quiz"]),
+  skillId: z.string().optional(),
+  skipSkillIds: z.array(z.string()).max(12).default([]),
   intake: projectIntakeSchema,
   roadmap: roadmapSchema,
   milestoneId: z.string().min(1).max(80),
@@ -26,6 +28,9 @@ export const learningRequestSchema = z.object({
   starter: starterSchema.optional(),
 }).strict().superRefine((input, ctx) => {
   if (!input.roadmap.milestones.some((item) => item.id === input.milestoneId)) ctx.addIssue({ code: "custom", path: ["milestoneId"], message: "Choose a milestone in this project." });
+  if (input.skillId && !input.roadmap.milestones.find(item => item.id === input.milestoneId)?.skillIds.includes(input.skillId)) ctx.addIssue({ code: "custom", path: ["skillId"], message: "Choose a skill in this milestone." });
+  if (input.action === "quiz" && !input.skillId) ctx.addIssue({ code: "custom", path: ["skillId"], message: "Choose a skill for this check." });
+  if (input.skipSkillIds.some(id => !input.roadmap.milestones.find(item => item.id === input.milestoneId)?.skillIds.includes(id))) ctx.addIssue({code: "custom", path: ["skipSkillIds"], message: "Skipped introductions must belong to this milestone."});
   if (input.action === "starter" && input.roadmap.milestones[0]?.id !== input.milestoneId) ctx.addIssue({ code: "custom", path: ["milestoneId"], message: "Starter files belong to the first milestone." });
   if (input.action === "tutor" && (!input.mode || !input.question)) ctx.addIssue({ code: "custom", path: ["question"], message: "Choose a help mode and enter a question." });
   if (input.action === "check" && (!input.answer || !input.knowledgeCheck)) ctx.addIssue({ code: "custom", path: ["answer"], message: "Answer the knowledge check first." });

@@ -12,6 +12,7 @@ export const sessionProjectSchema = z.object({
   roadmap: roadmapSchema,
   completedMilestoneIds: z.array(z.string()).max(20),
   createdAt: z.iso.datetime(),
+  revision: z.number().int().nonnegative().default(0),
   learning: z.record(z.string(), learningActivitySchema).optional(),
 }).strict().superRefine((project, context) => {
   const ids = new Set(project.roadmap.milestones.map((milestone) => milestone.id));

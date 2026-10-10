@@ -11,7 +11,7 @@ export function RoadmapView({ roadmap, completedIds = [], renderLearning }: { ro
   const milestone = roadmap.milestones[selected];
   const totalHours = roadmap.milestones.reduce((sum, item) => sum + item.estimatedHours, 0);
   return <>
-    <div className="roadmap-overview"><div><p className="eyebrow">PROJECT ROADMAP</p><h1>{roadmap.title}</h1><p className="subtitle">{roadmap.summary}</p></div><div className="roadmap-facts"><span>{roadmap.milestones.length} milestones</span><span>~{totalHours} hours</span><span>{completedIds.length} / {roadmap.milestones.length} complete</span></div></div>
+    <div className="roadmap-overview"><div><p className="eyebrow">PROJECT ROADMAP</p><h1>{roadmap.title}</h1><p className="subtitle">{roadmap.summary}</p></div><div className="roadmap-facts"><span>{roadmap.milestones.length} milestone{roadmap.milestones.length===1?"":"s"}</span><span>~{totalHours} hours</span><span>{completedIds.length} / {roadmap.milestones.length} complete</span></div></div>
     {roadmap.scopeNotes && <div className="notice notice-warning"><strong>A focused first version</strong><p>{roadmap.scopeNotes}</p></div>}
     <div className="roadmap-workspace"><nav className="milestone-rail" aria-label="Roadmap milestones"><p className="eyebrow">MILESTONES</p><ol>{roadmap.milestones.map((item, index) => {
       const complete = completedIds.includes(item.id);

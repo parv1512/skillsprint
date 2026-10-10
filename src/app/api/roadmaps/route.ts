@@ -1,11 +1,16 @@
 import "server-only";
 import { generateRoadmap } from "@/lib/ai/roadmap";
 import { handleRoadmapRequest } from "@/lib/server/roadmap-handler";
+import { getIdentity } from "@/lib/auth";
+import { withAIQuota } from "@/lib/server/workspace";
+import { safeFailure } from "@/lib/server/workspace-handler";
 
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
-  // Authentication is connected in Phase 4. Do not expose a paid API endpoint publicly before then.
-  if (process.env.NODE_ENV === "production") return Response.json({ error: "Project generation is available in the local workspace until sign-in is connected.", code: "AUTH_PENDING" }, { status: 503 });
-  return handleRoadmapRequest(request, (intake) => generateRoadmap(intake, { apiKey: process.env.GEMINI_API_KEY, model: process.env.GEMINI_MODEL }));
+  try {
+    const subject = await getIdentity();
+    if (!subject) return Response.json({error: "Sign in to create a project."}, {status: 401, headers: {"Cache-Control": "no-store"}});
+    return handleRoadmapRequest(request, intake => withAIQuota(subject, () => generateRoadmap(intake, { apiKey: process.env.GEMINI_API_KEY, model: process.env.GEMINI_MODEL })));
+  } catch(error) { return safeFailure(error); }
 }

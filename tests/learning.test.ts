@@ -14,7 +14,7 @@ const response=(value:unknown,finishReason="STOP")=>new Response(JSON.stringify(
 const options=(fetcher:typeof fetch)=>({apiKey:"test-key",model:"gemini-test",fetcher});
 const project=()=>sessionProjectSchema.parse({id:"00000000-0000-4000-8000-000000000001",createdAt:"2026-10-10T01:00:00Z",intake,roadmap,completedMilestoneIds:[]});
 describe("learning assistance",()=>{
- it("uses faster reasoning only for ordinary Gemini 3 tutoring",async()=>{
+ it("uses low reasoning for help and checks, with default reasoning for lessons and full solutions",async()=>{
   const fetcher=vi.fn<typeof fetch>().mockImplementation(async()=>response(reply));
   await generateLearning(input,{...options(fetcher),model:"gemini-3.8-flash"});
   const config=()=>JSON.parse(fetcher.mock.calls.at(-1)![1]!.body as string).generationConfig;
@@ -24,6 +24,12 @@ describe("learning assistance",()=>{
   fetcher.mockImplementation(async()=>response(lesson));
   await generateLearning({...input,action:"lesson"},{...options(fetcher),model:"gemini-3.8-flash"});
   expect(config().thinkingConfig).toBeUndefined();
+  fetcher.mockImplementation(async()=>response({passed:true,feedback:"A substantive explanation",nextStep:"Apply it"}));
+  await generateLearning({...input,action:"check",answer:"React schedules a render",knowledgeCheck:"Explain state"},{...options(fetcher),model:"gemini-3.8-flash"});
+  expect(config().thinkingConfig).toEqual({thinkingLevel:"low"});
+  fetcher.mockImplementation(async()=>response({question:"Why does updating state schedule a render?"}));
+  await generateLearning({...input,action:"quiz",skillId:"react.state"},{...options(fetcher),model:"gemini-3.8-flash"});
+  expect(config().thinkingConfig).toEqual({thinkingLevel:"low"});
  });
  it("uses hint-first rules, context and prior attempts with a separate solution option",()=>{
   const prompt=buildLearningPrompt({...input,history:[{role:"student",text:"I tried a local array."}]});

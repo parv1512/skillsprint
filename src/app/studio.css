@@ -121,3 +121,19 @@ body { font-family: var(--font-ui); }
 .starter-file .text-link { border:0; background:transparent; cursor:pointer; color:var(--green); padding:0; }
 .starter-steps { padding-left:20px; }.starter-steps li { margin:10px 0; }
 @media(max-width:700px) { .starter-browser { grid-template-columns:1fr; }.starter-browser nav { display:flex; flex-wrap:wrap; gap:5px; border:0; padding-right:0; }.starter-browser nav button { width:auto; max-width:100%; }.starter-file { padding-left:0; } }
+/* Persistent skill evidence stays in the Field Notes visual system. */
+.passport-records { display: grid; gap: 1.5rem; }
+.passport-record { border-top: 1px solid var(--line); padding: 1.5rem 0; }
+.passport-record-heading { display: flex; justify-content: space-between; gap: 1rem; align-items: flex-start; }
+.passport-record-heading h2 { margin: 0 0 .5rem; font: 400 24px/1.3 var(--font-heading); }
+.passport-record-heading p { margin: 0; }
+.passport-evidence { list-style: none; padding: 0; display: grid; gap: 1rem; }
+.passport-evidence li { border-left: 2px solid var(--line); padding-left: 1rem; }
+.passport-evidence .optional-label { display: block; margin-top: .4rem; }
+.evidence-text { white-space: pre-wrap; overflow-wrap: anywhere; font-family: inherit; font-size: .9rem; max-height: 18rem; overflow: auto; }
+.evidence-code { font: 12px/1.8 var(--font-code); }
+.targeted-check, .skill-reuse { border-top: 1px solid var(--line); padding: 1rem 0; margin: 1rem 0; }
+.targeted-check summary { cursor: pointer; font-weight: 600; margin-bottom: 1rem; }
+.skill-reuse ul { padding-left: 1.2rem; }
+.skill-reuse li { margin: .7rem 0; }
+@media (max-width: 700px) { .passport-record-heading { flex-direction: column; } }

@@ -232,3 +232,51 @@ Verification:
 - Starter app code was not installed, executed, or tested. The checks validate SkillSprint's generation, storage, interface, and archive handling.
 
 Phase 3 and the starter-files flow are included in the local checkpoint commit requested by the owner. Verification is recorded above. No push was authorized, and Phase 4 has not started. The current preview is running on http://127.0.0.1:3000.
+
+## Phase 4: authentication, persistence, and Passport checkpoint
+
+The owner approved Auth0 Regular Web Application + Universal Login, Drizzle with node-postgres, a seven-table relational schema, and Practiced from saved practical work plus confirmation / Mastered from that work plus a passed targeted skill check. Phase 4 is authorized; Phase 5 has not started.
+
+Implemented:
+- Official Auth0 SDK server sessions and proxy routing, sign-in/sign-out controls, stable subject-to-student mapping, and authenticated API access.
+- Tiger Data repository, additive SQL migration, ownership-scoped queries, composite ownership foreign keys, project version checks, and transactional writes.
+- Remote project adapter behind the existing UI interface, session-project preservation and explicit import with old completion/AI evidence reset.
+- Server-owned generated learning content, milestone feedback, targeted canonical skill checks, immutable submission/assessment evidence, and Passport status derivation.
+- Passport evidence with source-project links and New/Practiced/Mastered text states; canonical cross-project skip/review/refresher preferences and focused lessons.
+- One in-flight AI request / 30 attempts per ten minutes per identity, enforced in this process. Distributed enforcement remains a deployment concern.
+
+Files created: src/proxy.ts; src/lib/auth.ts; src/lib/db/{schema,config,client,repository}.ts; src/lib/domain/passport.ts; src/lib/server/{errors,auth-error,project-policy,workspace-handler,workspace}.ts; src/lib/projects/remote-store.ts; src/app/api/{workspace,projects,projects/[id],passport,skill-checks}/route.ts; src/app/sign-in-error/page.tsx; src/components/{learning-passport,skill-check,skill-reuse}.tsx; tests/{passport,database.live,learning.live}.test.ts; tests/helpers/server-only.ts; vitest.config.mts; drizzle.config.ts; drizzle/0000_misty_gorgon.sql and migration metadata; scripts/database.mjs; docs/PHASE_4_PLAN.md and PHASE_4_SETUP.md; six Phase 4 screenshots in docs/screenshots.
+
+Files updated: package.json/package-lock.json, .env.example, README.md, ARCHITECTURE.md, BUILD_STATUS.md, protected AI routes, project store/domain learning contracts, Gemini learning service, project provider/intake/roadmap, shell/dashboard/Passport page, learning workspace, studio.css, and session-store fixtures.
+
+Verification:
+- 67 offline tests passed; seven optional live cases are gated separately. Ownership/authentication denial, forged client review flags, invalid targets, duplicate check submission, stale saves/learning context, import evidence reset, focused assessment context, targeted prompt/output, safe callback diagnostics/redirects and remote TLS policy are covered.
+- Typecheck and production build passed after the Phase 4 source changes; build includes the Auth0 proxy and protected APIs.
+- Additive SQL reviewed. Corrected composite unique constraints so foreign-key targets exist before adding references. The migration was successfully applied to the configured Tiger Data database after verified TLS connected.
+- Production dependency audit: zero advisories. Development migration tooling reports four moderate advisories through older esbuild packages; no breaking force-fix/downgrade was applied.
+- Real Auth0 sign-in initially reported callback mismatch. After callback correction, code exchange failed because the app credentials were rejected. A dummy-code diagnostic isolated client authentication without creating login tokens; the owner recopied the matching Client Secret, after which client authentication and real login succeeded. The authenticated browser showed Sign out and account-backed storage. No private login code, token, or credential was logged.
+- The owner saved DATABASE_URL. Certificate-verified connection initially failed with SELF_SIGNED_CERT_IN_CHAIN. A credential-free TLS probe identified a private Timescale CA. After the owner explicitly approved a local-demo trust decision, that CA was pinned in ignored .tmp/tiger-ca.crt, with normal public roots retained. Encryption, hostname and certificate checks remain enabled; db:check and db:migrate passed. Initial private CA trust was not independently verified through the console.
+- Five real Tiger Data integration tests passed using two isolated synthetic student subjects: project reload/persistence, cross-owner reads/writes/check denial, practical evidence, forged-review rejection, targeted status transition, duplicate-review prevention, separate second-project progress, persisted preferences, reopening/history, duplicate submission/stale-save handling, and practical work submitted after confirmation. Exact-subject cleanup removed only the test profiles and their records afterward. Synthetic review fixtures are labeled and do not represent real student learning or a real Gemini verdict.
+- Seven protected running-app storage/AI requests returned 401 without a session. Offline checks cover rejection before repository/provider invocation.
+- Signed-out/empty screens and authenticated populated Passport/reuse screens inspected at desktop and 390px mobile sizes; no document horizontal overflow at the mobile size. Skill names use the approved heading font; practical code evidence uses monospace. Refresher navigation scrolls/focuses the selected skill. Source project links, evidence expanders, skip/review/refresher controls, refresh persistence, and a fresh-tab project load were exercised.
+- A real Gemini roadmap created labeled QA Counter A through the signed-in app. Its saved QA notes survived refresh, and simulated self-confirmation created temporary Practiced evidence. QA Toggle B's generation timed out, so that second roadmap was explicitly seeded for interface verification; its scope note identifies it as synthetic, not a successful AI generation.
+- Cross-project canonical matching linked React state to QA Counter A. Skip persisted after refresh, Review restored the introduction, and Refresher opened the correct selected skill. QA Toggle B stayed at 0/1 completed throughout.
+- Native Gemini targeted-question/review live test ultimately passed (one case, roughly 31 seconds). The browser also generated a real React state question and received a passed AI review of the labeled QA answer. Only React state advanced to Mastered; React components and TypeScript remained Practiced. Question, answer, feedback, and source projects were stored and displayed. No code was executed or claimed to work.
+- The owner approved low reasoning for quiz generation/review and switched the whole app to supported stable gemini-3.7-flash after repeated 3.8 failures. Lessons/full solutions retain default reasoning. Check prompts use only assessment-relevant context and concise response budgets. Both models experienced intermittent 503/timeouts; manual retries preserve input and failures award no passing evidence. Success in a final check is not an uptime guarantee.
+- Two exact-ID, labeled browser QA projects and their evidence/assessments were removed after verification. Derived unused skill records were cleared; the real student profile, unrelated projects, and original browser-session copies were preserved. Reloading the authenticated Passport showed No skills recorded yet. Temporary synthetic demonstrations do not remain in the real student's history.
+- Final default suite: 67 passed, seven optional live cases skipped by default. Final real database suite: five passed with query/statement timeouts configured. Final production build (including TypeScript) passed. git diff --check passed; .env.local, the pinned certificate, and QA helper metadata are confirmed ignored by Git.
+
+No credential input remains pending for local Phase 4. The application is ready for owner review. Phase 5 still needs approval for the actual demonstration workflow; it has not started. Remaining deployment considerations include shared rate limits, service/environment setup, and reviewing the local-demo CA trust decision for hosting. Legacy session import is implemented and unit-tested; an actual old-tab import was not exercised in this browser session.
+
+To run: follow PHASE_4_SETUP.md; configure local credentials; npm run db:check; npm run db:migrate; npm run dev. For source checks: npm test, npm run typecheck, npm run build. Credentials, TLS diagnostics, and certificate downloads stay outside Git.
+
+| Acceptance criterion | Current result |
+| --- | --- |
+| Student sign-in (1) | Passed with real Auth0 login; sign-out control present |
+| Appropriate learning evidence (7) | Passed with labeled QA work and a real targeted AI review; test evidence cleared afterward |
+| Persistent Passport (8) | Passed with real Tiger Data writes, refresh and fresh-tab reads |
+| Canonical cross-project recognition (9–11) | Matching/preferences/independent progress passed using QA data; the second roadmap was seeded, so the full two-AI-project demo remains Phase 5 |
+| Authentication and ownership (12) | Real login, signed-out denial, unit checks, and live database cross-owner isolation passed; two distinct Auth0 browser accounts were not exercised |
+| Error and retry behavior (13) | Safe callback/provider/storage states verified; Gemini availability remains intermittent |
+
+Phase 4 implementation and its checkpoint checks are complete, with the limitations above. The owner requested committing and pushing this checkpoint to main. Phase 5 has not been approved or started. Historical Phase 3 notes above predate checkpoint 37e15d3, which was subsequently committed and pushed to main with 5c55c4b.

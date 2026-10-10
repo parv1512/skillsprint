@@ -2,16 +2,24 @@
   "name": "skillsprint",
   "version": "0.1.0",
   "private": true,
-  "engines": { "node": "24.x" },
+  "engines": {
+    "node": "24.x"
+  },
   "scripts": {
     "dev": "next dev --hostname 127.0.0.1",
     "build": "next build",
     "start": "next start --hostname 127.0.0.1",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "db:generate": "drizzle-kit generate",
+    "db:check": "node scripts/database.mjs",
+    "db:migrate": "node scripts/database.mjs --migrate"
   },
   "dependencies": {
+    "@auth0/nextjs-auth0": "^4.31.1",
+    "drizzle-orm": "^0.45.4",
     "next": "16.4.0",
+    "pg": "^8.23.1",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "zod": "4.6.5"
@@ -19,8 +27,10 @@
   "devDependencies": {
     "@tailwindcss/postcss": "4.3.3",
     "@types/node": "24.19.2",
+    "@types/pg": "^8.23.1",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
+    "drizzle-kit": "^0.31.11",
     "tailwindcss": "4.3.3",
     "typescript": "5.9.3",
     "vitest": "5.0.3"
