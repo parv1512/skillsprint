@@ -143,3 +143,16 @@ The Phase 1 checkpoint had all 14 end-to-end criteria unfinished. Updated Phase 
 5. Verify Project A → Passport → Project B before polishing the demo.
 
 Phase 3 starts after the Phase 2 review. Commit/push proposals require the owner's explicit push approval.
+
+### UI simplification follow-up
+- User requested less supporting text. Removed repeated slogans, the method strip, intake sidebar, and redundant notices; shortened headings and empty states while retaining project tasks, criteria, dependencies, and essential session/privacy notices.
+- Kept the approved Field Notes direction and SkillSprint branding.
+- Verification: typecheck passed; production build compiled and generated all routes; inspected dashboard, intake, roadmap and Passport at desktop and 390px mobile, plus mobile project list; navigation and milestone selection worked. No new Gemini request was needed.
+- Changes are local and have not been committed or pushed.
+
+
+### Prior knowledge intake follow-up
+- Replaced learning goals with existing knowledge throughout the new-project form, validation, and AI request. Prompt now focuses teaching on project-relevant gaps while treating the response as self-report rather than verified evidence.
+- Kept hours as the effort budget and renamed its label to Time available to build. Days would require a separate deadline or daily availability to be useful.
+- Older session projects remain readable; original goals are preserved and never reinterpreted as existing knowledge.
+- Tests: 32 passed, live test skipped. Verified the new field in the browser; no new paid generation request was made.

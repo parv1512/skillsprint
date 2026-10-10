@@ -39,6 +39,8 @@ Each milestone needs an outcome, concrete implementation tasks, acceptance crite
 Choose skills only from the catalog below. Use the nearest general skill if a specific technology has no catalog entry; never invent IDs.
 Set resources to []: the application will attach curated official references from the skill catalog.
 Keep explanations encouraging and appropriate to experience. No lessons, completed tasks, mastery, or evidence should be fabricated.
+Use existingKnowledge as the student's self-reported starting point. Keep familiar fundamentals brief and focus teaching on gaps needed for the project. If they say none, start with the basics. If knowledge is not provided, use experience without assuming specific skills.
+Self-reported knowledge is not verified skill evidence: never award mastery or skip practical tasks and assessments because of it.
 Do not include real secrets or unnecessary personal data. Return only the specified JSON object.
 Skill catalog: ${JSON.stringify(skills.map(({ id, name, description }) => ({ id, name, description })))}
 Student input: ${JSON.stringify(intake)}`;

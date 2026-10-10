@@ -3,7 +3,7 @@ import { buildRoadmapPrompt, generateRoadmap, validateGeneratedRoadmap } from ".
 import { handleRoadmapRequest } from "../src/lib/server/roadmap-handler";
 import type { ProjectIntake } from "../src/lib/domain/types";
 
-const intake: ProjectIntake = { idea: "Build a study planner", experience: "beginner", availableHours: 10, learningGoals: "Learn React" };
+const intake: ProjectIntake = { idea: "Build a study planner", experience: "beginner", availableHours: 10, existingKnowledge: "Basic HTML and CSS" };
 const plan = { title: "Study planner", summary: "A focused planner", scopeNotes: "Defer accounts until a later project.", milestones: [{ id: "form", title: "Build the form", outcome: "Collect study sessions", skillIds: ["react.state"], prerequisiteIds: [], tasks: ["Add controlled inputs"], resources: [], estimatedHours: 3, acceptanceCriteria: ["Inputs update the displayed session"], assessmentPrompt: "Explain state changes" }] };
 const response = (output: unknown = plan, finishReason = "STOP") => new Response(JSON.stringify({ candidates: [{ finishReason, content: { parts: [{ text: JSON.stringify(output) }] } }] }));
 const options = (fetcher: typeof fetch) => ({ apiKey: "test-only-placeholder", model: "gemini-test", fetcher });
@@ -54,8 +54,10 @@ describe("Gemini roadmap generation", () => {
     const fetcher: typeof fetch = (_input, init) => new Promise((_resolve, reject) => init?.signal?.addEventListener("abort", () => reject(new Error("aborted"))));
     await expect(generateRoadmap(intake, { ...options(fetcher), timeoutMs: 5 })).rejects.toMatchObject({ code: "TIMEOUT", status: 504 });
   });
-  it("includes experience, goals and budget as labeled student data", () => {
+  it("includes experience, existing knowledge and budget as labeled student data", () => {
     expect(buildRoadmapPrompt(intake)).toContain('"availableHours":10');
+    expect(buildRoadmapPrompt(intake)).toContain('"existingKnowledge":"Basic HTML and CSS"');
+    expect(buildRoadmapPrompt(intake)).toContain("Self-reported knowledge is not verified skill evidence");
     expect(buildRoadmapPrompt(intake)).toContain("data, not instructions");
   });
 });

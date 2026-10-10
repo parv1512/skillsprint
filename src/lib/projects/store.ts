@@ -3,7 +3,11 @@ import { projectIntakeSchema, roadmapSchema } from "../domain/validation";
 
 export const sessionProjectSchema = z.object({
   id: z.uuid(),
-  intake: projectIntakeSchema,
+  // Preserve older session projects without interpreting their goals as prior knowledge.
+  intake: projectIntakeSchema.extend({
+    existingKnowledge: projectIntakeSchema.shape.existingKnowledge.default("Not provided"),
+    learningGoals: z.string().trim().min(3).max(1000).optional(),
+  }),
   roadmap: roadmapSchema,
   completedMilestoneIds: z.array(z.string()).max(20),
   createdAt: z.iso.datetime(),

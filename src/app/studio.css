@@ -71,3 +71,14 @@ body { font-family: var(--font-ui); }
 @media (max-width: 600px) { .field-notes main { padding: 29px 22px 20px; }.field-notes .topbar { padding: 0 22px; }.field-notes h1 { font-size: 37px; }.studio-heading { flex-direction: column; align-items: flex-start; gap: 19px; margin-bottom: 29px; }.studio-grid { grid-template-columns: 1fr; }.studio-projects { padding-right: 0; }.studio-margin { border-left: 0; border-top: 1px solid var(--ink); padding: 26px 0; }.studio-empty { padding-left: 0; min-height: auto; }.studio-section-heading h2 { font-size: 23px; }.method-strip ol { grid-template-columns: 1fr; gap: 22px; }.method-strip li p { margin-top: 8px; }.field-notes footer { margin: 10px 22px 0; }.field-notes .nav-item { font-size: 11px; padding: 10px 8px; }.desktop-break { display: none; } }
 @media (max-width: 1050px) { .intake-layout { gap: 28px; }.intake-margin { padding-left: 20px; }.roadmap-workspace { grid-template-columns: minmax(200px, .8fr) minmax(0, 1.4fr); }.milestone-detail { padding-left: 24px; } }
 @media (max-width: 700px) { .intake-layout, .roadmap-workspace, .passport-sheet { grid-template-columns: 1fr; }.intake-margin, .passport-sheet-aside { padding: 28px 0 0; border-left: 0; border-top: 1px solid var(--line); }.form-pair { grid-template-columns: 1fr; gap: 0; }.milestone-rail { padding-right: 0; }.milestone-detail { border-left: 0; padding-left: 0; border-top: 1px solid var(--ink); }.roadmap-overview { flex-direction: column; align-items: flex-start; gap: 18px; }.roadmap-facts { flex-direction: row; flex-wrap: wrap; gap: 15px; }.project-row { grid-template-columns: 25px 1fr; gap: 14px; }.project-row > .text-link { grid-column: 2; }.passport-sheet-main { padding-right: 0; } }
+
+/* Keep the workspace focused on actions and project content. */
+.field-notes main { padding-top: 48px; }
+.studio-heading { align-items: center; }
+.studio-heading h1 { margin: 0; }
+.studio-section-heading h2 { font-family: var(--font-heading); font-size: 25px; font-weight: 400; }
+.studio-margin h2 { margin: 0 0 16px; font-size: 25px; }
+.studio-empty { min-height: 210px; padding-left: 0; }
+.intake-layout { grid-template-columns: minmax(0, 680px); }
+.passport-legend { margin-top: 0; }
+@media (max-width: 600px) { .field-notes main { padding-top: 30px; }.studio-heading { align-items: flex-start; } }

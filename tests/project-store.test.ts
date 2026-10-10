@@ -4,7 +4,7 @@ import type { SessionProject } from "../src/lib/projects/store";
 
 const makeProject = (id: string): SessionProject => ({
   id, createdAt: "2026-10-10T01:00:00.000Z", completedMilestoneIds: [],
-  intake: { idea: "Build a study planner", experience: "beginner", availableHours: 10, learningGoals: "Learn React" },
+  intake: { idea: "Build a study planner", experience: "beginner", availableHours: 10, existingKnowledge: "Basic HTML and CSS" },
   roadmap: { title: "Planner", summary: "Build a planner", scopeNotes: "", milestones: [{ id: "one", title: "First task", outcome: "Add inputs", skillIds: ["react.state"], prerequisiteIds: [], tasks: ["Add inputs"], resources: [], estimatedHours: 2, acceptanceCriteria: ["Inputs work"], assessmentPrompt: "Explain state" }] },
 });
 const firstId = "00000000-0000-4000-8000-000000000001";
@@ -15,6 +15,17 @@ const memoryStorage = () => {
 };
 
 describe("temporary project storage", () => {
+  it("preserves older goals without treating them as existing knowledge", async () => {
+    const project = makeProject(firstId);
+    const { existingKnowledge: _knowledge, ...intake } = project.intake;
+    const legacy = { ...project, intake: { ...intake, learningGoals: "Learn React" } };
+    const storage = memoryStorage();
+    storage.setItem("skillsprint.projects.v1", JSON.stringify({ version: 1, projects: [legacy] }));
+    const loaded = await createSessionProjectStore(storage).loadProject(firstId);
+    expect(loaded?.intake.existingKnowledge).toBe("Not provided");
+    expect(loaded?.intake.learningGoals).toBe("Learn React");
+    expect(loaded?.roadmap).toEqual(project.roadmap);
+  });
   it("starts empty and survives adapter recreation in the same session", async () => {
     const storage = memoryStorage();
     const store = createSessionProjectStore(storage);

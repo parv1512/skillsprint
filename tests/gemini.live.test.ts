@@ -16,7 +16,7 @@ it.skipIf(process.env.SKILLSPRINT_LIVE_TEST !== "1")("generates a real validated
     }
     return response;
   };
-  const roadmap = await generateRoadmap({ idea: "Build a study planner for one student to add assignments, due dates, and view this week's tasks. No accounts or notifications.", experience: "beginner", preferredStack: "React and TypeScript", availableHours: 12, learningGoals: "Learn React components, state, and forms." }, { apiKey: key, model: process.env.GEMINI_MODEL, fetcher });
+  const roadmap = await generateRoadmap({ idea: "Build a study planner for one student to add assignments, due dates, and view this week's tasks. No accounts or notifications.", experience: "beginner", preferredStack: "React and TypeScript", availableHours: 12, existingKnowledge: "Basic HTML and CSS; no React experience." }, { apiKey: key, model: process.env.GEMINI_MODEL, fetcher });
   expect(roadmap.milestones.length).toBeGreaterThan(0);
   expect(roadmap.milestones.reduce((sum, milestone) => sum + milestone.estimatedHours, 0)).toBeLessThanOrEqual(12);
   await mkdir(".tmp", { recursive: true });

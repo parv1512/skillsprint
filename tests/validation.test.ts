@@ -6,10 +6,10 @@ const roadmap = { title: "Study planner", summary: "Build a useful planner", mil
 
 describe("project intake", () => {
   it("accepts and trims a realistic project idea", () => {
-    expect(projectIntakeSchema.parse({ idea: "  Build a study planner  ", experience: "beginner", availableHours: 12, learningGoals: "Learn React" }).idea).toBe("Build a study planner");
+    expect(projectIntakeSchema.parse({ idea: "  Build a study planner  ", experience: "beginner", availableHours: 12, existingKnowledge: "Basic HTML and CSS" }).idea).toBe("Build a study planner");
   });
-  it("rejects unusable time budgets and missing goals", () => {
-    expect(projectIntakeSchema.safeParse({ idea: "Build a study planner", experience: "beginner", availableHours: 0, learningGoals: "" }).success).toBe(false);
+  it("rejects unusable time budgets", () => {
+    expect(projectIntakeSchema.safeParse({ idea: "Build a study planner", experience: "beginner", availableHours: 0, existingKnowledge: "" }).success).toBe(false);
   });
 });
 
