@@ -11,9 +11,10 @@ type Props = {
   generate: () => void; openFiles: (path?: string) => void; openWork: () => void;
   help: (mode: TutorMode, question: string) => void;
   work: string; changeWork: (work: string) => void; saveWork: () => Promise<void>;
+  onDisplayedStepChange?: (title: string | undefined) => void;
 };
 
-export function GuidedBuild({lesson, starter, setupReady, localSetupConfirmed, completedStepIds, busy, prerequisitesReady, milestoneCompleted, confirmSetup, confirmStep, generate, openFiles, openWork, help, work, changeWork, saveWork}: Props) {
+export function GuidedBuild({lesson, starter, setupReady, localSetupConfirmed, completedStepIds, busy, prerequisitesReady, milestoneCompleted, confirmSetup, confirmStep, generate, openFiles, openWork, help, work, changeWork, saveWork, onDisplayedStepChange}: Props) {
   const steps = lesson?.guidedSteps ?? [];
   const nextIndex = completedStepIds.length;
   const [reviewIndex, setReviewIndex] = useState<number>();
@@ -24,6 +25,7 @@ export function GuidedBuild({lesson, starter, setupReady, localSetupConfirmed, c
   const attempt = useRef<HTMLTextAreaElement>(null);
   const index = reviewIndex !== undefined && reviewIndex < completedStepIds.length ? reviewIndex : Math.min(nextIndex, steps.length - 1);
   const step = steps[index];
+  useEffect(() => {onDisplayedStepChange?.(step?.title);}, [step?.title, onDisplayedStepChange]);
   useEffect(() => {
     if (!navigationRequest) return;
     revealResult(activeStep.current);
@@ -72,7 +74,7 @@ export function GuidedBuild({lesson, starter, setupReady, localSetupConfirmed, c
     <div className="guided-next">
       <div className="workspace-actions">
       {index > 0 && <button className="button button-secondary" disabled={busy} onClick={() => showStep(index - 1)}>Previous step</button>}
-      {nextIndex < steps.length && index === nextIndex ? <button className="button button-primary" disabled={busy} onClick={async () => {if (await confirmStep(step.id)) showStep();}}>I made and checked this change →</button> : index < Math.min(nextIndex, steps.length - 1) ? <button className="button button-primary" disabled={busy} onClick={() => showStep()}>Back to current step</button> : <button className="button button-primary" disabled={busy} onClick={openWork}>Review milestone work →</button>}
+      {nextIndex < steps.length && index === nextIndex ? <button className="button button-primary" disabled={busy} onClick={async () => {if (await confirmStep(step.id)) showStep();}}>I made and checked this change →</button> : index < Math.min(nextIndex, steps.length - 1) ? <button className="button button-primary" disabled={busy} onClick={() => showStep()}>Back to current step</button> : <button className="button button-primary" disabled={busy} onClick={openWork}>Open completion criteria</button>}
       </div>
       <p className="quiet-note">Step confirmations save your place. Milestone completion and Passport checks are separate.</p>
     </div>

@@ -44,7 +44,7 @@ describe("guided step navigation", () => {
   it("keeps the final step open when all confirmations are saved and offers work review", () => {
     const html = render(["step-0", "step-1", "step-2"]);
     expect(html).toContain("Edit instruction 2");
-    expect(html).toContain("Review milestone work");
+    expect(html).toContain("Open completion criteria");
     expect(html).toContain("Previous step");
     expect(html).not.toContain("I made and checked this change");
     expect(html).not.toContain("Finish the current step first");
