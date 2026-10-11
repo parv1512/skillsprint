@@ -1,10 +1,11 @@
 import { beforeAll, afterAll, describe, expect, it, vi } from "vitest";
 import { randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { getDatabase } from "../src/lib/db/client";
 import { repositoryFor, type WorkspaceRepository } from "../src/lib/db/repository";
-import { students, projects, milestones, activities, assessments, evidence, skillRecords } from "../src/lib/db/schema";
+import { students, projects, milestones, activities, assessments, evidence, skillRecords, aiUsage } from "../src/lib/db/schema";
+import {databaseAILeases,aiUsageKey} from "../src/lib/db/ai-quota";
 import { sessionProjectSchema } from "../src/lib/projects/store";
 import { emptyActivity } from "../src/lib/domain/learning";
 import { confirmMilestone, reopenMilestone } from "../src/lib/projects/progress";
@@ -28,6 +29,7 @@ describe.skipIf(!enabled)("Tiger Data persistence and ownership (isolated synthe
   afterAll(async () => {
     // Delete only the two synthetic profiles created by this run, using exact subjects and IDs.
     const db = getDatabase(); const rows = await db.select().from(students).where(inArray(students.subject, subjects));
+    await db.delete(aiUsage).where(inArray(aiUsage.key,subjects.map(aiUsageKey)));
     const owners = rows.map(row => row.id);
     if (owners.length) await db.transaction(async tx => {
       await tx.delete(evidence).where(inArray(evidence.ownerId, owners));
@@ -40,6 +42,24 @@ describe.skipIf(!enabled)("Tiger Data persistence and ownership (isolated synthe
     });
     await db.$client.end();
   }, 30000);
+  it("shares concurrent leases, attempt limits, and expired-lease recovery across callers",async()=>{
+    const subject=subjects[0],db=getDatabase(),key=aiUsageKey(subject);
+    const leases=await Promise.all([databaseAILeases.acquire(subject),databaseAILeases.acquire(subject)]);
+    expect(leases.filter(Boolean)).toHaveLength(1);
+    const first=leases.find(Boolean)!;
+    await databaseAILeases.release(subject,"00000000-0000-4000-8000-000000000099");
+    expect(await databaseAILeases.acquire(subject)).toBeNull();
+    await databaseAILeases.release(subject,first);
+    await db.update(aiUsage).set({attempts:30}).where(eq(aiUsage.key,key));
+    expect(await databaseAILeases.acquire(subject)).toBeNull();
+    await db.update(aiUsage).set({windowStarted:sql`now() - interval '11 minutes'`}).where(eq(aiUsage.key,key));
+    const reset=await databaseAILeases.acquire(subject);expect(reset).not.toBeNull();
+    await db.update(aiUsage).set({leaseExpires:sql`now() - interval '1 second'`}).where(eq(aiUsage.key,key));
+    const recovered=await databaseAILeases.acquire(subject);expect(recovered).not.toBeNull();
+    await databaseAILeases.release(subject,reset!);
+    expect(await databaseAILeases.acquire(subject)).toBeNull();
+    await databaseAILeases.release(subject,recovered!);
+  });
   it("persists project data and refuses another owner's ID without modifying it", async () => {
     await a.saveProject(input);
     expect((await a.loadProject(id))?.roadmap.title).toBe(input.roadmap.title);

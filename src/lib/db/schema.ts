@@ -26,3 +26,11 @@ export const skillRecords = pgTable("skillsprint_skill_records", {
   ownerId: uuid("owner_id").notNull().references(() => students.id), skillId: text("skill_id").notNull(), status: text().$type<"new" | "practiced" | "mastered">().notNull().default("new"),
   lastDemonstratedAt: timestamp("last_demonstrated_at", { withTimezone: true, mode: "string" }), preference: text().$type<"skip" | "review" | "refresher">().notNull().default("review"),
 }, table => [uniqueIndex("skillsprint_skill_owner").on(table.ownerId, table.skillId)]);
+// Transient AI counters are separate from students and learning evidence.
+export const aiUsage = pgTable("skillsprint_ai_usage", {
+  key: text().primaryKey(),
+  windowStarted: timestamp("window_started", {withTimezone:true,mode:"string"}).defaultNow().notNull(),
+  attempts: integer().notNull().default(0),
+  leaseToken: uuid("lease_token"),
+  leaseExpires: timestamp("lease_expires", {withTimezone:true,mode:"string"}),
+});

@@ -6,6 +6,7 @@ import { withAIQuota } from "@/lib/server/workspace";
 import { safeFailure } from "@/lib/server/workspace-handler";
 
 export const runtime = "nodejs";
+export const maxDuration = 180;
 
 export async function POST(request: Request) {
   try {

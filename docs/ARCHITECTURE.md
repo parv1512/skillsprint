@@ -2,9 +2,9 @@
 
 ## Foundation
 
-One Next.js application contains the UI and future server services. Pages render the learning experience; reusable components implement navigation and presentation. Domain types derive from Zod contracts where appropriate, so runtime and TypeScript validation agree.
+One Next.js application contains the UI and authenticated server services. Pages render the learning experience; reusable components implement navigation and presentation. Domain types derive from Zod contracts where appropriate, so runtime and TypeScript validation agree.
 
-No separate backend, microservices, deployment provider, or additional sponsor integration is introduced.
+The same Next.js application runs on Vercel. No separate backend, microservices, or additional sponsor service is introduced.
 
 ## Service boundaries
 
@@ -62,9 +62,9 @@ Client project saves change only student work/answers/criteria and student-confi
 
 AI requests load the project and milestone from owned server records. General checks provide milestone feedback. Separate targeted checks persist one canonical skill and the server-generated question before reviewing the submitted answer. A check is reviewed once; retries create a new question. Only server-produced passed reviews create assessment evidence. Practiced requires saved work and confirmed completion; Mastered additionally requires a passed targeted check. Both labels remain qualified by evidence provenance: student-confirmed work and AI-reviewed understanding, not executed code.
 
-Passport skills match new roadmap requirements by canonical IDs. Previously practiced skills offer skip, review, or refresher preferences with source-project links. The server omits skipped basic introductions from new lessons; the UI still presents all practical tasks and new skill topics. Lesson skipping never changes practical completion. Legacy session import is explicit, preserves browser copies, keeps student notes, and resets completion/untrusted AI artifacts before storage.
+Passport skills match new roadmap requirements by canonical IDs. Previously practiced skills appear above guided steps with source-project links and an optional, initially closed concept-notes dropdown. Take the Passport check opens the targeted written-check panel. Skip and Review lesson controls were removed by the owner. New lessons automatically receive practiced/mastered skills with practical evidence in another project and shorten their beginner explanations while retaining implementation tasks. New skills, same-project-only records, and AI-only evidence do not trigger this adaptation. Practical tasks and completion remain separate from reviewing concepts. Legacy session import is explicit, preserves browser copies, keeps student notes, and resets completion/untrusted AI artifacts before storage.
 
-The current AI limit is one in-flight request and 30 attempts per ten minutes per signed-in identity within one process. This protects the local/demo instance, not distributed deployment; shared enforcement is a Phase 6 concern. Production dependency audit reports zero advisories at this checkpoint; Drizzle Kit's development-only transitive esbuild tooling has four moderate advisories. No automatic forced downgrade or breaking dependency fix was applied.
+The AI limit is one active request and 30 attempts per ten minutes per signed-in identity across instances. An additive Tiger Data quota table uses a hashed subject key and atomic conditional upsert; a 150-second lease expires after interrupted requests, and release matches its exact token. Database failure refuses AI calls safely. This is not a global daily spending limit. Production dependency audit reports zero advisories; development-only esbuild tooling has four moderate advisories. No forced breaking dependency change was applied.
 
 Knowledge-check prompts send only the question/answer, canonical target, level, and outcome. The owner approved low reasoning for quiz generation and review after repeated timeouts. Response budgets and concise feedback instructions are bounded; the server still requires validated complete output before storing a result. General feedback is displayed only when its reviewed answer matches the current answer. Targeted reviews are immutable records. Changing a confirmed milestone's criteria requires reopening; adding work after confirmation can still create practical evidence, and duplicate unchanged submissions are not re-awarded.
 
@@ -74,3 +74,29 @@ Auth0 callback failures are logged as allowlisted codes and redirect to a safe r
 The shared milestone UI now presents one guided file edit at a time using an external editor. Lesson JSON can contain ordered guidedSteps; old lessons default to an empty list. Existing activity JSON adds setupConfirmed/completedStepIds with backward-compatible defaults, so no SQL migration is needed. Server saves keep the authoritative AI plan, validate an ordered confirmation prefix, and preserve the separate milestone/evidence policy. UI position-only saves retain unsaved attempt text without silently persisting it. Regenerating guidance resets its step markers but does not remove practical work, milestone history, or targeted assessments.
 
 Prettier's standalone local parsers are dynamically loaded for supported starter source. Formatting is a view/export transformation, not code execution or a rewrite of stored model output. Display/copy/ZIP share the formatted source and preserve unsupported, invalid, or over-budget output. Native guidance/formatting checks and limitations are in BUILD_STATUS.md and GUIDED_BUILD.md.
+
+## Finishing interface and result readback
+
+The project milestone list uses a 64px desktop number rail with a title/status/hour overlay that opens by pointer or keyboard without resizing the lesson. On phones it becomes a horizontal number row. A completed number keeps its digit plus a separate mark. The rail's surface strip spans the lesson height.
+
+Milestone multiple-choice questions have exactly four validated options and one answer index; grading is local and never writes Passport assessment evidence. Submitted options remain disabled with visible Correct answer and Your answer labels, plus the existing explanation.
+
+After saving a completed milestone, the provider returns the refreshed server Passport records. The announcement and persistent title summary use only practical evidence matching the current project, milestone, canonical skill, and saved submission. Server-derived status supplies Practiced or Mastered; no lesson or UI action derives a passing check. Completed milestones without matching practical evidence do not display an invented status.
+
+Phase 6 hosting, shared AI limits, and deployment verification are tracked in PHASE_6_PLAN.md.
+
+```mermaid
+flowchart LR
+  Student[Student browser] --> App[Next.js on Vercel]
+  App --> Auth[Auth0 server session]
+  App --> Owner[Ownership and request validation]
+  Owner --> Quota[Tiger Data shared AI lease]
+  Quota --> Gemini[Gemini structured response]
+  Gemini --> Validation[Runtime schema validation]
+  Validation --> DB[Tiger Data projects and learning]
+  Owner --> DB
+  DB --> Evidence[Practical work and written check evidence]
+  Evidence --> Passport[Learning Passport]
+```
+
+The student edits and runs code in an external editor/browser. No node in this diagram executes student submissions. Database TLS uses certificate/hostname verification with the approved PEM pin plus Node public trust roots. Production credentials are sensitive Vercel settings, and production has its own Auth0 session secret.

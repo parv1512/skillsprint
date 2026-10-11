@@ -19,7 +19,7 @@ export function SkillReuse({skillIds, projectId, onPractice, lessonBusy}: {skill
   }
   return <div className="skill-reuse"><h3>You’ve practiced this before</h3>
     <ul>{reused.map(record => {const source = record.evidence.find(item => item.projectId !== projectId && item.kind === "student-work")!; return <li key={record.skillId}>{findSkill(record.skillId)?.name} · <span className={`skill-state skill-${record.status}`}>{record.status}</span> · <Link href={`/projects/${source.projectId}`}>{source.projectTitle}</Link></li>;})}</ul>
-    <div className="workspace-actions"><button className="button button-secondary" aria-pressed={reused.every(record => record.preference === "refresher")} disabled={busy || lessonBusy} onClick={() => void practice()}>Practice this skill again</button></div>
-    {error && <p ref={errorResult} tabIndex={-1} role="alert">{error}</p>}<p className="quiet-note">Practice this skill again opens the Passport check for {findSkill(reused[0].skillId)?.name}. Create a question there when ready.</p>
+    <div className="workspace-actions"><button className="button button-secondary" aria-pressed={reused.every(record => record.preference === "refresher")} disabled={busy || lessonBusy} onClick={() => void practice()}>Take the Passport check</button></div>
+    {error && <p ref={errorResult} tabIndex={-1} role="alert">{error}</p>}<p className="quiet-note">Take the Passport check opens a written question for {findSkill(reused[0].skillId)?.name}. A pass can mark it mastered when your project work is already saved.</p>
   </div>;
 }

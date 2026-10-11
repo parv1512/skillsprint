@@ -5,7 +5,7 @@ import type { Roadmap, Milestone } from "@/lib/domain/types";
 import { findSkill } from "@/lib/domain/skills";
 import { Icon } from "./icon";
 
-export function RoadmapView({ roadmap, completedIds = [], renderLearning }: { roadmap: Roadmap; completedIds?: string[]; renderLearning?: (milestone: Milestone) => React.ReactNode }) {
+export function RoadmapView({ roadmap, completedIds = [], renderLearning, renderMilestoneResult }: { roadmap: Roadmap; completedIds?: string[]; renderLearning?: (milestone: Milestone) => React.ReactNode; renderMilestoneResult?: (milestone: Milestone) => React.ReactNode }) {
   const next = roadmap.milestones.findIndex((milestone) => !completedIds.includes(milestone.id));
   const [selected, setSelected] = useState(Math.max(0, next));
   const [railExpanded, setRailExpanded] = useState(false);
@@ -21,7 +21,7 @@ export function RoadmapView({ roadmap, completedIds = [], renderLearning }: { ro
       const status = complete ? "Completed" : ready ? "Ready to begin" : "Upcoming";
       return <li key={item.id}><button type="button" className={`milestone-selector ${selected === index ? "selected" : ""}`} onClick={() => {setSelected(index);setRailExpanded(false);}} aria-label={`${index + 1}, ${item.title}, ${status.toLowerCase()}`} aria-controls="milestone-detail" aria-pressed={selected === index}><span className={`milestone-number ${complete ? "complete" : ""}`}>{index + 1}{complete && <span className="milestone-completed-mark" aria-hidden="true"><Icon name="check" width="10" /></span>}</span><span className="milestone-caption"><strong>{item.title}</strong><small>{status} · ~{item.estimatedHours}h</small>{item.prerequisiteIds.length > 0 && <small className="dependency-note">Depends on {item.prerequisiteIds.map((id) => String(roadmap.milestones.findIndex((previous) => previous.id === id) + 1).padStart(2, "0")).join(", ")}</small>}</span></button></li>;
     })}</ol></nav>
-      <section id="milestone-detail" className="milestone-detail" aria-labelledby="milestone-title" key={milestone.id}><p className="eyebrow">MILESTONE {String(selected + 1).padStart(2, "0")} / ~{milestone.estimatedHours} HOURS</p><h2 id="milestone-title">{milestone.title}</h2><p className="milestone-outcome">{milestone.outcome}</p>
+      <section id="milestone-detail" className="milestone-detail" aria-labelledby="milestone-title" key={milestone.id}><p className="eyebrow">MILESTONE {String(selected + 1).padStart(2, "0")} / ~{milestone.estimatedHours} HOURS</p><h2 id="milestone-title">{milestone.title}</h2>{renderMilestoneResult?.(milestone)}<p className="milestone-outcome">{milestone.outcome}</p>
         {milestone.prerequisiteIds.length > 0 && <p className="prerequisite-summary">Before this milestone: {milestone.prerequisiteIds.map((id) => roadmap.milestones.find((item) => item.id === id)?.title).join("; ")}.</p>}
         {renderLearning ? renderLearning(milestone) : <><div className="brief-section"><h3>Skills</h3><ul className="concept-list">{milestone.skillIds.map((id) => { const skill = findSkill(id); return <li key={id}><span className="skill-state skill-new">New</span><div><strong>{skill?.name ?? id}</strong></div></li>; })}</ul></div>
         <div className="brief-section"><h3>Tasks</h3><ol className="task-list">{milestone.tasks.map((task, index) => <li key={index}><span>{String(index + 1).padStart(2, "0")}</span><p>{task}</p></li>)}</ol></div>

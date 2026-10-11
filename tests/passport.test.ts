@@ -5,7 +5,7 @@ import { emptyActivity } from "../src/lib/domain/learning";
 import { sessionProjectSchema } from "../src/lib/projects/store";
 import { handleWorkspace } from "../src/lib/server/workspace-handler";
 import type { WorkspaceRepository } from "../src/lib/db/repository";
-import { normalizeDatabaseUrl } from "../src/lib/db/config";
+import { normalizeDatabaseUrl, databasePoolConfig } from "../src/lib/db/config";
 import { buildLearningPrompt, generateLearning } from "../src/lib/ai/learning";
 import { learningRequestSchema } from "../src/lib/domain/learning";
 import { safeAuthReason, safeReturnTo } from "../src/lib/server/auth-error";
@@ -112,7 +112,7 @@ describe("authenticated workspace and evidence", () => {
   it("never equates reading or a check alone with practical mastery", () => {
     expect(evidenceStatus([])).toBe("new"); expect(evidenceStatus([{kind: "ai-check"}])).toBe("new"); expect(evidenceStatus([{kind: "student-work"}])).toBe("practiced"); expect(evidenceStatus([{kind: "student-work"}, {kind: "ai-check"}])).toBe("mastered");
   });
-  it("uses saved skip choices for normal lesson creation without changing practical progress", async () => {
+  it("shortens evidenced cross-project skills in lessons regardless of old review preferences", async () => {
     const deps = dependencies();
     const priorProjectId = "00000000-0000-4000-8000-000000000003";
     const passport = vi.fn<WorkspaceRepository["passport"]>().mockResolvedValue([{
@@ -131,7 +131,19 @@ describe("authenticated workspace and evidence", () => {
     const [record] = await passport();
     passport.mockResolvedValue([{...record, preference: "refresher"}]);
     expect((await handleWorkspace(request({projectId, milestoneId: "one", action: "lesson"}), "learning", deps)).status).toBe(200);
-    expect(deps.generate.mock.calls[1][0].skipSkillIds).toEqual([]);
+    expect(deps.generate.mock.calls[1][0].skipSkillIds).toEqual(["react.state"]);
+    passport.mockResolvedValue([{...record, preference: "review"}]);
+    expect((await handleWorkspace(request({projectId, milestoneId: "one", action: "lesson"}), "learning", deps)).status).toBe(200);
+    expect(deps.generate.mock.calls[2][0].skipSkillIds).toEqual(["react.state"]);
+    passport.mockResolvedValue([{...record,status: "new"}]);
+    expect((await handleWorkspace(request({projectId, milestoneId: "one", action: "lesson"}), "learning", deps)).status).toBe(200);
+    expect(deps.generate.mock.calls[3][0].skipSkillIds).toEqual([]);
+    passport.mockResolvedValue([{...record,evidence: [{...record.evidence[0],projectId}]}]);
+    expect((await handleWorkspace(request({projectId, milestoneId: "one", action: "lesson"}), "learning", deps)).status).toBe(200);
+    expect(deps.generate.mock.calls[4][0].skipSkillIds).toEqual([]);
+    passport.mockResolvedValue([{...record,evidence: [{...record.evidence[0],kind: "ai-check"}]}]);
+    expect((await handleWorkspace(request({projectId, milestoneId: "one", action: "lesson"}), "learning", deps)).status).toBe(200);
+    expect(deps.generate.mock.calls[5][0].skipSkillIds).toEqual([]);
     expect(deps.repo.saveProject).not.toHaveBeenCalled();
     expect(deps.repo.saveGenerated.mock.calls.every(call => !Object.hasOwn(call[3] ?? {}, "completionConfirmedAt"))).toBe(true);
   });
@@ -139,6 +151,15 @@ describe("authenticated workspace and evidence", () => {
     const url = new URL(normalizeDatabaseUrl("postgres://user:test@db.example:5432/db?sslmode=disable&ssl=false&uselibpqcompat=true"));
     expect(url.searchParams.get("sslmode")).toBe("verify-full"); expect(url.searchParams.has("ssl")).toBe(false); expect(url.searchParams.has("uselibpqcompat")).toBe(false);
     expect(normalizeDatabaseUrl("postgres://localhost/db?sslmode=disable")).toContain("sslmode=disable");
+    const pem="-----BEGIN CERTIFICATE-----\nTEST-ONLY\n-----END CERTIFICATE-----";
+    const options=databasePoolConfig("postgres://user:test@db.example/db?sslmode=disable&sslrootcert=C:/local/ca.crt&application_name=skillsprint",pem);
+    const remote=new URL(options.connectionString!);
+    expect(remote.searchParams.has("sslrootcert")).toBe(false);
+    expect(remote.searchParams.has("sslmode")).toBe(false);
+    expect(remote.searchParams.get("application_name")).toBe("skillsprint");
+    expect(options.ssl).toMatchObject({rejectUnauthorized:true});
+    expect((options.ssl as {ca:string[]}).ca).toContain(pem);
+    expect(()=>databasePoolConfig("postgres://db.example/db","invalid")).toThrow("PEM");
   });
   it("generates targeted questions and omits skipped introductions from lessons", async () => {
     const input = learningRequestSchema.parse({action: "quiz", skillId: "react.state", intake: project().intake, roadmap: project().roadmap, milestoneId: "one", skipSkillIds: ["react.state"]});

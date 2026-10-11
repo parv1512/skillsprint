@@ -68,7 +68,7 @@ export async function handleWorkspace(request: Request, operation: "projects" | 
       if (input.action === "tutor" && (!input.mode || !input.question)) throw new WorkspaceError("Choose a help mode and enter a question.");
       const {projectId: _projectId, revision: _revision, ...details} = input;
       const priorSkills = await repo.passport();
-      const skipSkillIds = priorSkills.filter(record => record.status !== "new" && record.preference === "skip" && milestone.skillIds.includes(record.skillId) && record.evidence.some(item => item.projectId !== project.id && item.kind === "student-work")).map(record => record.skillId);
+      const skipSkillIds = priorSkills.filter(record => record.status !== "new" && (input.action === "lesson" || record.preference === "skip") && milestone.skillIds.includes(record.skillId) && record.evidence.some(item => item.projectId !== project.id && item.kind === "student-work")).map(record => record.skillId);
       const aiInput = learningRequestSchema.parse({...context(project, input.milestoneId, input.action === "lesson"), ...details, skipSkillIds, checkFormat: activity.checkFormat, knowledgeCheck: activity.shortQuestion || activity.lesson?.knowledgeCheck || milestone.assessmentPrompt, history: activity.messages});
       const result = await dependencies.generate(aiInput);
       let update = {};

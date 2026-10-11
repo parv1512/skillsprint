@@ -13,14 +13,16 @@ Follow PHASE_4_SETUP.md, start the app with `npm run dev`, and sign in. The reta
 
 Both are real Gemini-generated one-milestone roadmaps with a one-hour budget. Their intake and submitted work identify them as Phase 5 demonstrations. The titles themselves were chosen by Gemini.
 
-## Live presentation
+## Current replay presentation
+
+The original Phase 5 results are historical. This sequence uses the owner-approved finishing UI; the latest recording plan is PHASE_6_DEMO.md.
 
 1. Open A. Show its ordered roadmap and saved guidance in Build (older concept notes are expandable). In Copilot, show the actual saved question about changing a plain JavaScript variable and Gemini's short hint to use a state setter. The reply does not provide the whole project.
 2. Open Your work. Show the sample submission, observed counter behavior, confirmed criteria, and completed milestone. Explain that completion is student-confirmed; the application does not execute this submitted code.
 3. Open Learning Passport. Expand React state evidence and follow the source-project link. Explain the distinction between practical work and a targeted AI check.
 4. Open B's Build tab. Show React components/state recognized by canonical identifiers with links to A, alongside the other required skills.
-5. Choose Review to revisit introductions; choose Skip introduction to focus on new concepts. With both reused React skills skipped, the generated lesson can focus on forms/validation and accessibility. Practical tasks still require completion.
-6. Choose Refresher check. It opens Your work, selects a reused skill, and focuses the targeted-check control. Show a saved question/answer/review, or request a new question if the provider is available. Only that skill is assessed.
+5. Show the practiced-skill banner above the building steps. Expand Concept notes and example directly below it if a review is useful. The old Skip and Review lesson buttons were removed at the owner's request; they are not part of the current presentation.
+6. Choose Take the Passport check. It opens Your work, selects a reused skill, and focuses the targeted-check control. Show a saved question/answer/review, or explicitly create a new question if the provider is available. Only that skill is assessed.
 7. Show B's work and the new Forms and validation evidence in the Passport after completion. Source-project links explain where skills were practiced. Reload to show that the data is account-backed.
 
 Retained projects may already be completed at presentation time. To demonstrate the earlier 1/1 versus 0/1 stage, reopen B explicitly; historical evidence remains by design. Reopening is not an evidence deletion/reset. Do not describe retained demo statuses as the presenter's own credentials.
