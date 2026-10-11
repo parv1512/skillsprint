@@ -18,8 +18,7 @@ export function GuidedBuild({lesson, starter, setupReady, localSetupConfirmed, c
   const steps = lesson?.guidedSteps ?? [];
   const nextIndex = completedStepIds.length;
   const [reviewIndex, setReviewIndex] = useState<number>();
-  const [attemptOpen, setAttemptOpen] = useState(false);
-  const [reviewNeedsAttempt, setReviewNeedsAttempt] = useState(false);
+  const [attemptOpen, setAttemptOpen] = useState(() => !!work.trim());
   const [navigationRequest, setNavigationRequest] = useState(0);
   const activeStep = useRef<HTMLLIElement>(null);
   const attempt = useRef<HTMLTextAreaElement>(null);
@@ -32,16 +31,15 @@ export function GuidedBuild({lesson, starter, setupReady, localSetupConfirmed, c
   }, [index, navigationRequest]);
   function showStep(previous?: number) {
     setReviewIndex(previous);
+    setAttemptOpen(!!work.trim());
     setNavigationRequest(value => value + 1);
   }
   function ask(mode: TutorMode, selected: GuidedStep) {
     if (mode === "review" && !work.trim()) {
-      setReviewNeedsAttempt(true);
       setAttemptOpen(true);
       requestAnimationFrame(() => attempt.current?.focus());
       return;
     }
-    setReviewNeedsAttempt(false);
     const request = mode === "hint" ? "Can you give me a hint" : mode === "explain" ? "Can you explain what I’m learning" : "Can you review my attempt";
     help(mode, `${request} for “${selected.title}” in ${selected.filePath}?`);
   }
@@ -69,12 +67,12 @@ export function GuidedBuild({lesson, starter, setupReady, localSetupConfirmed, c
     {step.exampleCode && <details className="guided-example"><summary>Small example</summary><pre className="code-block"><code>{step.exampleCode}</code></pre></details>}
     <div className="guided-result"><h4>You should see</h4><p>{step.expectedResult}</p><h4>Check your change</h4><p>{step.verification}</p></div>
     <details className="guided-reflection"><summary>Explain it to yourself</summary><p>{step.reflection}</p></details>
-    <div className="workspace-actions"><button className="button button-secondary" disabled={busy} onClick={() => ask("hint", step)}>Give me a hint</button><button className="button button-secondary" disabled={busy} onClick={() => ask("explain", step)}>Explain this</button><button className="button button-secondary" disabled={busy} onClick={() => ask("review", step)}>Review my attempt</button></div>
-    <details className="guided-attempt" open={attemptOpen} onToggle={event => setAttemptOpen(event.currentTarget.open)}><summary>Share your attempt</summary>{reviewNeedsAttempt && !work.trim() && <p role="status" className="quiet-note">A review needs your code or notes first. Add your attempt below.</p>}<div className="form-field"><label htmlFor="guided-attempt">Current code or notes</label><textarea id="guided-attempt" ref={attempt} className="code-input" rows={6} maxLength={12000} disabled={busy} value={work} onChange={event => changeWork(event.target.value)} placeholder="Paste your current snippet from your editor." /></div><div className="workspace-actions"><button className="button button-secondary" disabled={busy} onClick={() => void saveWork()}>Save attempt</button><button className="button button-secondary" disabled={busy || !work.trim()} onClick={() => ask("review", step)}>Review this step</button></div></details>
+    <div className="workspace-actions"><button className="button button-secondary" disabled={busy} onClick={() => ask("hint", step)}>Give me a hint</button><button className="button button-secondary" disabled={busy} onClick={() => ask("explain", step)}>Explain this</button></div>
+    <details className="guided-attempt" open={attemptOpen} onToggle={event => setAttemptOpen(event.currentTarget.open)}><summary>{attemptOpen ? "Share your attempt" : "Paste code for a review"}</summary>{!work.trim() && <p role="status" className="quiet-note">A review needs your code or notes first. Add your attempt below.</p>}<div className="form-field"><label htmlFor="guided-attempt">Current code or notes</label><textarea id="guided-attempt" ref={attempt} className="code-input" rows={6} maxLength={12000} disabled={busy} value={work} onChange={event => changeWork(event.target.value)} placeholder="Paste your current snippet from your editor." /></div><div className="workspace-actions"><button className="button button-secondary" disabled={busy} onClick={() => void saveWork()}>Save attempt</button><button className="button button-secondary" disabled={busy || !work.trim()} onClick={() => ask("review", step)}>Review this step</button></div></details>
     <div className="guided-next">
       <div className="workspace-actions">
       {index > 0 && <button className="button button-secondary" disabled={busy} onClick={() => showStep(index - 1)}>Previous step</button>}
-      {nextIndex < steps.length && index === nextIndex ? <button className="button button-primary" disabled={busy} onClick={async () => {if (await confirmStep(step.id)) showStep();}}>I made and checked this change →</button> : index < Math.min(nextIndex, steps.length - 1) ? <button className="button button-primary" disabled={busy} onClick={() => showStep()}>Back to current step</button> : <button className="button button-primary" disabled={busy} onClick={openWork}>Open completion criteria</button>}
+      {nextIndex < steps.length && index === nextIndex ? <button className="button button-primary" disabled={busy} onClick={async () => {if (await confirmStep(step.id)) showStep();}}>I finished this step →</button> : index < Math.min(nextIndex, steps.length - 1) ? <button className="button button-primary" disabled={busy} onClick={() => showStep()}>Back to current step</button> : <button className="button button-primary" disabled={busy} onClick={openWork}>Open completion criteria</button>}
       </div>
       <p className="quiet-note">Step confirmations save your place. Milestone completion and Passport checks are separate.</p>
     </div>

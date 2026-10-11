@@ -38,7 +38,7 @@ describe("guided step navigation", () => {
     expect(html).toContain("Edit instruction 1");
     expect(html).not.toContain("Edit instruction 0");
     expect(html).toContain("Previous step");
-    expect(html).toContain("I made and checked this change");
+    expect(html).toContain("I finished this step");
     expect(html.match(/Finish the current step first\./g)).toHaveLength(1);
   });
   it("keeps the final step open when all confirmations are saved and offers work review", () => {
@@ -46,7 +46,7 @@ describe("guided step navigation", () => {
     expect(html).toContain("Edit instruction 2");
     expect(html).toContain("Open completion criteria");
     expect(html).toContain("Previous step");
-    expect(html).not.toContain("I made and checked this change");
+    expect(html).not.toContain("I finished this step");
     expect(html).not.toContain("Finish the current step first");
   });
 });

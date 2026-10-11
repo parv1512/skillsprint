@@ -100,7 +100,7 @@ describe("authenticated workspace and evidence", () => {
   it("never equates reading or a check alone with practical mastery", () => {
     expect(evidenceStatus([])).toBe("new"); expect(evidenceStatus([{kind: "ai-check"}])).toBe("new"); expect(evidenceStatus([{kind: "student-work"}])).toBe("practiced"); expect(evidenceStatus([{kind: "student-work"}, {kind: "ai-check"}])).toBe("mastered");
   });
-  it("uses persisted reuse choices for lessons without changing practical progress", async () => {
+  it("uses saved skip choices for normal lesson creation without changing practical progress", async () => {
     const deps = dependencies();
     const priorProjectId = "00000000-0000-4000-8000-000000000003";
     const passport = vi.fn<WorkspaceRepository["passport"]>().mockResolvedValue([{
@@ -108,11 +108,16 @@ describe("authenticated workspace and evidence", () => {
       evidence: [{id: checkId, projectId: priorProjectId, milestoneId: "first", skillId: "react.state", kind: "student-work", snapshot: "Prior practical work", createdAt: "2026-10-10T01:00:00Z", projectTitle: "Project A"}],
     }]);
     deps.repo.passport = passport;
+    expect((await handleWorkspace(request({skillId: "react.state", preference: "skip"}), "preference", deps)).status).toBe(200);
+    expect(deps.repo.setPreference).toHaveBeenCalledWith("react.state", "skip");
+    expect(deps.generate).not.toHaveBeenCalled();
+    expect(deps.repo.saveProject).not.toHaveBeenCalled();
+    expect(deps.repo.saveGenerated).not.toHaveBeenCalled();
     deps.generate.mockResolvedValue({sections: [{title: "Apply state", explanation: "Use your prior knowledge for the new task."}], example: {language: "javascript", code: "setCount(n => n + 1)", explanation: "Update from prior state."}, knowledgeCheck: "Why use a setter?"});
     expect((await handleWorkspace(request({projectId, milestoneId: "one", action: "lesson"}), "learning", deps)).status).toBe(200);
     expect(deps.generate.mock.calls[0][0].skipSkillIds).toEqual(["react.state"]);
     const [record] = await passport();
-    passport.mockResolvedValue([{...record, preference: "review"}]);
+    passport.mockResolvedValue([{...record, preference: "refresher"}]);
     expect((await handleWorkspace(request({projectId, milestoneId: "one", action: "lesson"}), "learning", deps)).status).toBe(200);
     expect(deps.generate.mock.calls[1][0].skipSkillIds).toEqual([]);
     expect(deps.repo.saveProject).not.toHaveBeenCalled();

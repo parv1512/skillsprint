@@ -36,17 +36,12 @@ export function LearningWorkspace({ project, milestone }: { project: SessionProj
     return()=>cancelAnimationFrame(frame);
   },[refresher]);
   const skipped = milestone.skillIds.filter(id => passport.some(record => record.skillId === id && record.status !== "new" && record.preference === "skip" && record.evidence.some(item => item.projectId !== project.id && item.kind === "student-work")));
-  const skipIntroduction = skipped.length === milestone.skillIds.length;
   const [activity,setActivity] = useState<LearningActivity>(()=>project.learning?.[milestone.id]??emptyActivity());
   const [displayedStepTitle,setDisplayedStepTitle]=useState<string>();
   const [tab,setTab]=useState("learn"), [mode,setMode]=useState<TutorMode>("hint"), [question,setQuestion]=useState("");
   const [busy,setBusy]=useState<string|null>(null), [error,setError]=useState<string|null>(null), [status,setStatus]=useState("");
   const [confirmReplacement,setConfirmReplacement]=useState(false);
-  const [replacementPurpose,setReplacementPurpose]=useState<"build" | "review">("build");
-  const [reviewLessonStatus,setReviewLessonStatus]=useState("");
-  const [reviewLessonError,setReviewLessonError]=useState<string | null>(null);
   const guideContainer=useRef<HTMLDivElement>(null);
-  const reuseContainer=useRef<HTMLDivElement>(null);
   const lock=useRef(false);
   const baselineRevision=useRef(project.revision);
   const check=activity.shortQuestion || activity.lesson?.knowledgeCheck || milestone.assessmentPrompt;
@@ -76,17 +71,13 @@ export function LearningWorkspace({ project, milestone }: { project: SessionProj
     baselineRevision.current++;
     if(deferUntilSaved)setActivity(next);
   }
-  async function run(action:LearningRequest["action"], replacementConfirmed = false, lessonPurpose: "build" | "review" = "build") {
+  async function run(action:LearningRequest["action"], replacementConfirmed = false) {
     if(lock.current)return;
-    if(action==="lesson") {setReviewLessonStatus("");setReviewLessonError(null);}
-    if(action==="lesson" && !replacementConfirmed && (activity.lesson?.guidedSteps.length || lessonPurpose==="review")) {
-      setReplacementPurpose(lessonPurpose);
+    if(action==="lesson" && !replacementConfirmed && activity.lesson?.guidedSteps.length) {
       setConfirmReplacement(true);
-      if(lessonPurpose==="review")setReviewLessonStatus(activity.lesson?.guidedSteps.length ? "Confirm replacement to create your review lesson." : "Confirm to create your first review lesson.");
       return;
     }
     setConfirmReplacement(false);
-    const reviewReadyMessage=activity.lesson?.guidedSteps.length ? "Review lesson ready. Your previous step instructions were replaced." : "Review lesson ready. Your first building steps are ready.";
     lock.current=true;setBusy(action);setError(null);setStatus("");
     const controller=new AbortController(), timer=setTimeout(()=>controller.abort(),["starter", "check", "milestone-quiz"].includes(action) ? 130000 : 65000);
     try {
@@ -106,11 +97,8 @@ export function LearningWorkspace({ project, milestone }: { project: SessionProj
         next={...activity,messages:[...activity.messages,{role:"student" as const,text:`${modes.find(item=>item.value===mode)?.label}: ${question}`},{role:"tutor" as const,text:reply.explanation,code:reply.code,nextStep:reply.nextStep}].slice(-12)};
       }
       await persist(next, action==="lesson");
-      if(action==="lesson" && lessonPurpose==="review") {
-        setReviewLessonStatus(reviewReadyMessage);
-      }
       if(action==="tutor")setQuestion("");
-      setStatus(action==="milestone-quiz"?"Knowledge-check question ready.":action==="check"?"Review saved":action==="lesson"?lessonPurpose==="review"?reviewReadyMessage:"Lesson saved":action==="starter"?"Starter saved":"Reply saved");
+      setStatus(action==="milestone-quiz"?"Knowledge-check question ready.":action==="check"?"Review saved":action==="lesson"?"Lesson saved":action==="starter"?"Starter saved":"Reply saved");
       if (!isEditingField()) {
         setTab(action==="tutor"?"copilot":action==="check" || action==="milestone-quiz"?"work":"learn");
         if(action==="lesson")focusResult(guideContainer);
@@ -119,7 +107,7 @@ export function LearningWorkspace({ project, milestone }: { project: SessionProj
         if(action==="check")focusResult(milestoneCheckContainer,"[data-check-result]");
         if(action==="milestone-quiz")focusResult(milestoneCheckContainer,"[data-check-question]");
       }
-    }catch(cause){const message=controller.signal.aborted?"The request timed out. Your work is still here.":cause instanceof Error?cause.message:"Couldn’t save your work.";setError(message);focusResult(errorContainer);if(action==="lesson" && lessonPurpose==="review"){setReviewLessonError(message);setReviewLessonStatus("");}}
+    }catch(cause){const message=controller.signal.aborted?"The request timed out. Your work is still here.":cause instanceof Error?cause.message:"Couldn’t save your work.";setError(message);focusResult(errorContainer);}
     finally{clearTimeout(timer);lock.current=false;setBusy(null);}
   }
   async function saveWork(attemptOnly = false){
@@ -169,12 +157,12 @@ export function LearningWorkspace({ project, milestone }: { project: SessionProj
     {error&&<p ref={errorContainer} tabIndex={-1} role="alert" className="notice notice-error">{error} You can retry or save your work.</p>}
     <p ref={feedbackContainer} tabIndex={-1} role="status" className="workspace-feedback">{busy?busy==="save"?"Saving…":busy==="starter"?"Creating starter files… Up to two minutes.":busy==="check"?"Reviewing understanding… Up to two minutes.":busy==="milestone-quiz"?"Creating knowledge-check question… Up to two minutes.":busy==="tutor"?"Asking Copilot…":"Gemini is responding…":status}</p>
     {confirmReplacement && <section className="notice" role="dialog" aria-labelledby="replace-guidance-title" aria-describedby="replace-guidance-description">
-      <h3 id="replace-guidance-title">{activity.lesson?.guidedSteps.length ? "Replace the current steps?" : "Create your first review lesson?"}</h3>
-      <p id="replace-guidance-description">{activity.lesson?.guidedSteps.length ? "Gemini will write a new lesson. After it is saved, your current step instructions will be replaced and the step checkmarks will be cleared. Your saved work and milestone completion stay saved." : "Gemini will write your first review lesson and create building steps. Your saved work and milestone completion stay saved."}</p>
-      <div className="workspace-actions"><button autoFocus className="button button-secondary" onClick={() => {setConfirmReplacement(false);const message=activity.lesson?.guidedSteps.length ? "Your current steps and checkmarks are unchanged." : "No lesson was created. Your saved work and milestone completion are unchanged.";setStatus(message);if(replacementPurpose==="review"){setReviewLessonStatus(message);focusResult(reuseContainer,".reuse-review-action");}}}>Keep current steps</button><button className="button button-primary" disabled={!!busy} onClick={() => void run("lesson",true,replacementPurpose)}>{activity.lesson?.guidedSteps.length ? "Replace the current steps" : "Create first lesson"}</button></div>
+      <h3 id="replace-guidance-title">Replace the current steps?</h3>
+      <p id="replace-guidance-description">Gemini will write a new lesson. After it is saved, your current step instructions will be replaced and the step checkmarks will be cleared. Your saved work and milestone completion stay saved.</p>
+      <div className="workspace-actions"><button autoFocus className="button button-secondary" onClick={() => {setConfirmReplacement(false);setStatus("Your current steps and checkmarks are unchanged.");focusResult(feedbackContainer);}}>Keep current steps</button><button className="button button-primary" disabled={!!busy} onClick={() => void run("lesson",true)}>Replace the current steps</button></div>
     </section>}
     <section role="tabpanel" id="panel-learn" aria-labelledby="tab-learn" hidden={tab!=="learn"}>
-      <div ref={guideContainer} tabIndex={-1} aria-label="Building steps">{reviewLessonStatus.startsWith("Review lesson ready.") && <p role="status" className="quiet-note">{reviewLessonStatus}</p>}<GuidedBuild onDisplayedStepChange={setDisplayedStepTitle} lesson={activity.lesson} starter={starter} setupReady={setupReady} localSetupConfirmed={activity.setupConfirmed || project.learning?.[firstMilestone.id]?.setupConfirmed === true} completedStepIds={activity.completedStepIds} busy={!!busy} prerequisitesReady={prerequisitesReady} milestoneCompleted={completed}
+      <div ref={guideContainer} tabIndex={-1} aria-label="Building steps"><GuidedBuild onDisplayedStepChange={setDisplayedStepTitle} lesson={activity.lesson} starter={starter} setupReady={setupReady} localSetupConfirmed={activity.setupConfirmed || project.learning?.[firstMilestone.id]?.setupConfirmed === true} completedStepIds={activity.completedStepIds} busy={!!busy} prerequisitesReady={prerequisitesReady} milestoneCompleted={completed}
         confirmSetup={async () => {if(await saveGuidedProgress({...activity,setupConfirmed:true},"Your local setup confirmation is saved. SkillSprint did not run your project."))focusResult(feedbackContainer);}}
         confirmStep={id => {
           const steps=activity.lesson?.guidedSteps ?? [];
@@ -187,12 +175,11 @@ export function LearningWorkspace({ project, milestone }: { project: SessionProj
         generate={() => run("lesson")} openFiles={openFiles} openWork={() => {setTab("work");setStatus("Completion criteria opened. Check each one, then mark the milestone complete.");focusResult(criteriaContainer);}}
         help={(nextMode, nextQuestion) => {setMode(nextMode);setQuestion(nextQuestion.slice(0,2000));setTab("copilot");setStatus("Copilot opened. Your question is ready to send.");requestAnimationFrame(() => document.getElementById("copilot-question")?.focus());}}
         work={activity.work} changeWork={work => {setActivity({...activity,work});setStatus("Unsaved work");}} saveWork={() => saveWork(true)} /></div>
-      <div ref={reuseContainer}><SkillReuse projectId={project.id} skillIds={milestone.skillIds} createReviewLesson={() => void run("lesson",false,"review")} lessonBusy={!!busy || confirmReplacement} lessonError={reviewLessonError} lessonStatus={reviewLessonStatus} hasGuidedSteps={!!activity.lesson?.guidedSteps.length} currentStepTitle={displayedStepTitle} onSkip={(_skip, check, id) => {setReviewLessonStatus("");setReviewLessonError(null);if(check){setRefresher(true);setCheckSkillId(id);setTab("work");}else setRefresher(false);}} /></div>
+      <SkillReuse projectId={project.id} skillIds={milestone.skillIds} lessonBusy={!!busy || confirmReplacement} currentStepTitle={displayedStepTitle} onSkip={(_skip, check, id) => {if(check){setRefresher(true);setCheckSkillId(id);setTab("work");}else setRefresher(false);}} />
       <div ref={filesContainer}><StarterFiles starter={starter} busy={!!busy} generate={() => run("starter")} openRequest={filesRequest} requestedPath={filesPath} setupMilestone={firstMilestone.id !== milestone.id ? firstMilestone.title : undefined} /></div>
       <div className="skill-tags">{milestone.skillIds.map(id=><span className={`skill-state skill-${passport.find(record=>record.skillId===id)?.status??"new"}`} key={id}>{findSkill(id)?.name??id} · {passport.find(record=>record.skillId===id)?.status??"new"}</span>)}</div>
       {skipped.length > 0 ? null : activity.lesson && <details className="concept-notes"><summary>Concept notes and example</summary><div className="lesson-content">{activity.lesson.sections.map((section,index)=><section key={index}><h3>{section.title}</h3><p>{section.explanation}</p></section>)}<h3>Worked example <span className="optional-label">{activity.lesson.example.language}</span></h3><pre className="code-block"><code>{activity.lesson.example.code}</code></pre><p>{activity.lesson.example.explanation}</p></div></details>}
       {milestone.resources.length>0&&<details className="learning-references"><summary>Official references</summary><ul className="resource-list">{milestone.resources.map(resource=><li key={resource.url}><a href={resource.url} target="_blank" rel="noopener noreferrer">{resource.title}<span className="sr-only"> (opens in a new tab)</span></a></li>)}</ul></details>}
-      {!skipIntroduction && skipped.length > 0 && activity.lesson && <button className="button button-secondary" disabled={!!busy} onClick={()=>run("lesson")}>Create focused lesson</button>}
     </section>
     <section role="tabpanel" id="panel-work" aria-labelledby="tab-work" hidden={tab!=="work"}>
       <h3>Tasks</h3><ol className="task-list">{milestone.tasks.map((task,index)=><li key={index}><span>{String(index+1).padStart(2,"0")}</span><p>{task}</p></li>)}</ol>

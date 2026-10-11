@@ -203,3 +203,30 @@ body { font-family: var(--font-ui); }
 .code-line { display: grid; grid-template-columns: 3ch max-content; gap: 16px; min-height: 1.8em; }
 .line-number { color: var(--muted); text-align: right; user-select: none; border-right: 1px solid var(--line); padding-right: 8px; }
 @media(max-width:600px) { .guided-step-heading { flex-wrap: wrap; }.learning-workspace .guided-build h3 { font-size: 24px; }.code-line { gap: 10px; } }
+
+/* The project milestone list opens over the lesson without changing its width. */
+.milestone-number { position: relative; }
+.milestone-completed-mark { position: absolute; top: -5px; right: -5px; display: grid; place-items: center; width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--paper); background: var(--green); color: white; }
+.milestone-navigation .milestone-selector.selected .milestone-number { outline: 2px solid var(--green); outline-offset: 2px; }
+.milestone-navigation .milestone-selector:focus-visible .milestone-number { outline: 3px solid #17836c; outline-offset: 3px; }
+.milestone-navigation .milestone-rail > .eyebrow,
+.milestone-navigation .milestone-caption { display: none; }
+@media (min-width: 701px) {
+  .milestone-navigation {
+    grid-template-columns: 64px minmax(0, 1fr);
+    background-image: linear-gradient(var(--surface), var(--surface));
+    background-size: 64px 100%;
+    background-repeat: no-repeat;
+  }
+  .milestone-navigation .milestone-rail { position: relative; width: 64px; padding: 27px 0 20px; align-self: start; z-index: 5; overflow: hidden; background: var(--surface); transition: width 180ms ease; }
+  .milestone-navigation .milestone-rail-expanded { width: 340px; box-shadow: 8px 0 16px #23292414; }
+  .milestone-navigation .milestone-caption { display: block; width: 262px; flex-shrink: 0; visibility: hidden; }
+  .milestone-navigation .milestone-rail-expanded .milestone-caption { visibility: visible; }
+}
+@media (max-width: 700px) {
+  .milestone-navigation .milestone-rail { padding: 16px 0; overflow-x: auto; }
+  .milestone-navigation .milestone-rail ol { display: flex; gap: 10px; margin: 0; padding: 4px; }
+  .milestone-navigation .milestone-rail li { flex-shrink: 0; padding-bottom: 0; }
+  .milestone-navigation .milestone-rail li::after { display: none; }
+  .milestone-navigation .milestone-selector { width: 56px; }
+}
