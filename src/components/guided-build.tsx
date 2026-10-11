@@ -11,10 +11,9 @@ type Props = {
   generate: () => void; openFiles: (path?: string) => void; openWork: () => void;
   help: (mode: TutorMode, question: string) => void;
   work: string; changeWork: (work: string) => void; saveWork: () => Promise<void>;
-  onDisplayedStepChange?: (title: string | undefined) => void;
 };
 
-export function GuidedBuild({lesson, starter, setupReady, localSetupConfirmed, completedStepIds, busy, prerequisitesReady, milestoneCompleted, confirmSetup, confirmStep, generate, openFiles, openWork, help, work, changeWork, saveWork, onDisplayedStepChange}: Props) {
+export function GuidedBuild({lesson, starter, setupReady, localSetupConfirmed, completedStepIds, busy, prerequisitesReady, milestoneCompleted, confirmSetup, confirmStep, generate, openFiles, openWork, help, work, changeWork, saveWork}: Props) {
   const steps = lesson?.guidedSteps ?? [];
   const nextIndex = completedStepIds.length;
   const [reviewIndex, setReviewIndex] = useState<number>();
@@ -24,7 +23,6 @@ export function GuidedBuild({lesson, starter, setupReady, localSetupConfirmed, c
   const attempt = useRef<HTMLTextAreaElement>(null);
   const index = reviewIndex !== undefined && reviewIndex < completedStepIds.length ? reviewIndex : Math.min(nextIndex, steps.length - 1);
   const step = steps[index];
-  useEffect(() => {onDisplayedStepChange?.(step?.title);}, [step?.title, onDisplayedStepChange]);
   useEffect(() => {
     if (!navigationRequest) return;
     revealResult(activeStep.current);

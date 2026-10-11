@@ -7,7 +7,7 @@ export function StudioDashboard() {
   const latest = projects[0];
   const demonstrated = passport.filter(record=>record.status!=="new").length;
   return <>
-    <div className="studio-heading"><h1>Your workspace</h1><Link href="/projects/new" className="button button-primary">New project<Icon name="plus" /></Link></div>
+    <div className="studio-heading"><div><h1>Your workspace</h1><p className="subtitle">Build a real project. A skill you practice here is saved and not taught from the beginning next time.</p></div><Link href="/projects/new" className="button button-primary">New project<Icon name="plus" /></Link></div>
     {error && <p role="alert" className="notice notice-error">{error}</p>}
     <div className="studio-grid">
       <section className="studio-projects" aria-labelledby="projects-title"><div className="studio-section-heading"><h2 id="projects-title">Projects</h2><Link href="/projects" className="text-link">View all<Icon name="arrow" width="16" /></Link></div>

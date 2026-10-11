@@ -15,6 +15,8 @@ import { MilestoneCheck } from "./milestone-check";
 import { multipleChoiceQuestionSchema } from "@/lib/domain/learning";
 import { targetedCheckSchema } from "@/lib/domain/passport";
 import {isEditingField, revealResult, useResultFocus} from "./result-focus";
+import Link from "next/link";
+import {recordedMilestoneSkills} from "@/lib/domain/passport";
 const modes: { value: TutorMode; label: string }[] = [{value:"hint",label:"Hint"},{value:"explain",label:"Explain"},{value:"debug",label:"Debug"},{value:"review",label:"Review code"},{value:"example",label:"Example"},{value:"solution",label:"Full solution"}];
 export function LearningWorkspace({ project, milestone }: { project: SessionProject; milestone: Milestone }) {
   const {saveProject,loadProject,passport} = useProjects();
@@ -35,11 +37,11 @@ export function LearningWorkspace({ project, milestone }: { project: SessionProj
     const frame=requestAnimationFrame(()=>{revealResult(checkContainer.current?.querySelector<HTMLSelectElement>("select") ?? null);});
     return()=>cancelAnimationFrame(frame);
   },[refresher]);
-  const skipped = milestone.skillIds.filter(id => passport.some(record => record.skillId === id && record.status !== "new" && record.preference === "skip" && record.evidence.some(item => item.projectId !== project.id && item.kind === "student-work")));
+  const previouslyPracticed = milestone.skillIds.filter(id => passport.some(record => record.skillId === id && record.status !== "new" && record.evidence.some(item => item.projectId !== project.id && item.kind === "student-work")));
   const [activity,setActivity] = useState<LearningActivity>(()=>project.learning?.[milestone.id]??emptyActivity());
-  const [displayedStepTitle,setDisplayedStepTitle]=useState<string>();
   const [tab,setTab]=useState("learn"), [mode,setMode]=useState<TutorMode>("hint"), [question,setQuestion]=useState("");
   const [busy,setBusy]=useState<string|null>(null), [error,setError]=useState<string|null>(null), [status,setStatus]=useState("");
+  const [passportCompletion,setPassportCompletion]=useState<string | null>(null);
   const [confirmReplacement,setConfirmReplacement]=useState(false);
   const guideContainer=useRef<HTMLDivElement>(null);
   const lock=useRef(false);
@@ -55,10 +57,17 @@ export function LearningWorkspace({ project, milestone }: { project: SessionProj
       if(!latest)throw new Error("This project is no longer in this session.");
       if(latest.revision!==baselineRevision.current)throw new Error("This project changed elsewhere. Keep your unsaved work, then reload before saving.");
       const next=completed?reopenMilestone(latest,milestone.id):confirmMilestone(latest,milestone.id,activity);
-      await saveProject(next);
+      const savedPassport=await saveProject(next);
       baselineRevision.current++;
       setActivity(next.learning?.[milestone.id]??activity);
-      setStatus(completed?"Milestone reopened":"Completion saved · student-confirmed");
+      if(completed) {setStatus("Milestone reopened");setPassportCompletion(null);}
+      else {
+        const recorded=recordedMilestoneSkills(savedPassport.filter(skill=>milestone.skillIds.includes(skill.skillId)),project.id,milestone.id,activity.work);
+        const message=recorded.length
+          ? `Milestone complete. Recorded in your Learning Passport: ${recorded.map(skill=>`${findSkill(skill.skillId)?.name ?? skill.skillId} · ${skill.status}`).join("; ")}.`
+          : "Milestone complete. No practical skill evidence was recorded for this submission. Save your code or implementation notes to record skills in your Learning Passport.";
+        setStatus(message);setPassportCompletion(message);
+      }
       focusResult(feedbackContainer);
     }catch(cause){setError(cause instanceof Error?cause.message:"Couldn’t save completion.");focusResult(errorContainer);}finally{lock.current=false;setBusy(null);}
   }
@@ -152,17 +161,20 @@ export function LearningWorkspace({ project, milestone }: { project: SessionProj
   const firstMilestone=project.roadmap.milestones[0];
   const starter=activity.starter ?? project.learning?.[firstMilestone.id]?.starter;
   const setupReady=activity.setupConfirmed || project.learning?.[firstMilestone.id]?.setupConfirmed === true || project.completedMilestoneIds.includes(firstMilestone.id);
+  const conceptNotes = activity.lesson && <details className="concept-notes"><summary>Concept notes and example</summary><div className="lesson-content">{activity.lesson.sections.map((section,index)=><section key={index}><h3>{section.title}</h3><p>{section.explanation}</p></section>)}<h3>Worked example <span className="optional-label">{activity.lesson.example.language}</span></h3><pre className="code-block"><code>{activity.lesson.example.code}</code></pre><p>{activity.lesson.example.explanation}</p></div></details>;
   return <div className="learning-workspace">
     <div className="learning-tabs" role="tablist" aria-label="Milestone workspace">{["learn","work","copilot"].map(item=><button type="button" role="tab" id={`tab-${item}`} aria-selected={tab===item} aria-controls={`panel-${item}`} tabIndex={tab===item?0:-1} key={item} onClick={()=>{setTab(item);if(item!=="work")setRefresher(false);}} onKeyDown={event=>{if(["ArrowLeft","ArrowRight","Home","End"].includes(event.key)){event.preventDefault();const tabs=["learn","work","copilot"],index=event.key==="Home"?0:event.key==="End"?2:(tabs.indexOf(item)+(event.key==="ArrowRight"?1:2))%3;setTab(tabs[index]);if(tabs[index]!=="work")setRefresher(false);document.getElementById(`tab-${tabs[index]}`)?.focus();}}}>{item==="learn"?"Build":item==="work"?"Your work":"Copilot"}</button>)}</div>
     {error&&<p ref={errorContainer} tabIndex={-1} role="alert" className="notice notice-error">{error} You can retry or save your work.</p>}
-    <p ref={feedbackContainer} tabIndex={-1} role="status" className="workspace-feedback">{busy?busy==="save"?"Saving…":busy==="starter"?"Creating starter files… Up to two minutes.":busy==="check"?"Reviewing understanding… Up to two minutes.":busy==="milestone-quiz"?"Creating knowledge-check question… Up to two minutes.":busy==="tutor"?"Asking Copilot…":"Gemini is responding…":status}</p>
+    <p ref={feedbackContainer} tabIndex={-1} role="status" className="workspace-feedback">{busy?busy==="save"?"Saving…":busy==="starter"?"Creating starter files… Up to two minutes.":busy==="check"?"Reviewing understanding… Up to two minutes.":busy==="milestone-quiz"?"Creating knowledge-check question… Up to two minutes.":busy==="tutor"?"Asking Copilot…":"Gemini is responding…":status}{!busy && passportCompletion === status && <>{" "}<Link href="/passport" className="text-link">View Learning Passport →</Link></>}</p>
     {confirmReplacement && <section className="notice" role="dialog" aria-labelledby="replace-guidance-title" aria-describedby="replace-guidance-description">
       <h3 id="replace-guidance-title">Replace the current steps?</h3>
       <p id="replace-guidance-description">Gemini will write a new lesson. After it is saved, your current step instructions will be replaced and the step checkmarks will be cleared. Your saved work and milestone completion stay saved.</p>
       <div className="workspace-actions"><button autoFocus className="button button-secondary" onClick={() => {setConfirmReplacement(false);setStatus("Your current steps and checkmarks are unchanged.");focusResult(feedbackContainer);}}>Keep current steps</button><button className="button button-primary" disabled={!!busy} onClick={() => void run("lesson",true)}>Replace the current steps</button></div>
     </section>}
     <section role="tabpanel" id="panel-learn" aria-labelledby="tab-learn" hidden={tab!=="learn"}>
-      <div ref={guideContainer} tabIndex={-1} aria-label="Building steps"><GuidedBuild onDisplayedStepChange={setDisplayedStepTitle} lesson={activity.lesson} starter={starter} setupReady={setupReady} localSetupConfirmed={activity.setupConfirmed || project.learning?.[firstMilestone.id]?.setupConfirmed === true} completedStepIds={activity.completedStepIds} busy={!!busy} prerequisitesReady={prerequisitesReady} milestoneCompleted={completed}
+      <SkillReuse projectId={project.id} skillIds={milestone.skillIds} lessonBusy={!!busy || confirmReplacement} onPractice={id => {setRefresher(true);setCheckSkillId(id);setTab("work");}} />
+      {previouslyPracticed.length > 0 && conceptNotes}
+      <div ref={guideContainer} tabIndex={-1} aria-label="Building steps"><GuidedBuild lesson={activity.lesson} starter={starter} setupReady={setupReady} localSetupConfirmed={activity.setupConfirmed || project.learning?.[firstMilestone.id]?.setupConfirmed === true} completedStepIds={activity.completedStepIds} busy={!!busy} prerequisitesReady={prerequisitesReady} milestoneCompleted={completed}
         confirmSetup={async () => {if(await saveGuidedProgress({...activity,setupConfirmed:true},"Your local setup confirmation is saved. SkillSprint did not run your project."))focusResult(feedbackContainer);}}
         confirmStep={id => {
           const steps=activity.lesson?.guidedSteps ?? [];
@@ -175,10 +187,9 @@ export function LearningWorkspace({ project, milestone }: { project: SessionProj
         generate={() => run("lesson")} openFiles={openFiles} openWork={() => {setTab("work");setStatus("Completion criteria opened. Check each one, then mark the milestone complete.");focusResult(criteriaContainer);}}
         help={(nextMode, nextQuestion) => {setMode(nextMode);setQuestion(nextQuestion.slice(0,2000));setTab("copilot");setStatus("Copilot opened. Your question is ready to send.");requestAnimationFrame(() => document.getElementById("copilot-question")?.focus());}}
         work={activity.work} changeWork={work => {setActivity({...activity,work});setStatus("Unsaved work");}} saveWork={() => saveWork(true)} /></div>
-      <SkillReuse projectId={project.id} skillIds={milestone.skillIds} lessonBusy={!!busy || confirmReplacement} currentStepTitle={displayedStepTitle} onSkip={(_skip, check, id) => {if(check){setRefresher(true);setCheckSkillId(id);setTab("work");}else setRefresher(false);}} />
       <div ref={filesContainer}><StarterFiles starter={starter} busy={!!busy} generate={() => run("starter")} openRequest={filesRequest} requestedPath={filesPath} setupMilestone={firstMilestone.id !== milestone.id ? firstMilestone.title : undefined} /></div>
       <div className="skill-tags">{milestone.skillIds.map(id=><span className={`skill-state skill-${passport.find(record=>record.skillId===id)?.status??"new"}`} key={id}>{findSkill(id)?.name??id} · {passport.find(record=>record.skillId===id)?.status??"new"}</span>)}</div>
-      {skipped.length > 0 ? null : activity.lesson && <details className="concept-notes"><summary>Concept notes and example</summary><div className="lesson-content">{activity.lesson.sections.map((section,index)=><section key={index}><h3>{section.title}</h3><p>{section.explanation}</p></section>)}<h3>Worked example <span className="optional-label">{activity.lesson.example.language}</span></h3><pre className="code-block"><code>{activity.lesson.example.code}</code></pre><p>{activity.lesson.example.explanation}</p></div></details>}
+      {previouslyPracticed.length === 0 && conceptNotes}
       {milestone.resources.length>0&&<details className="learning-references"><summary>Official references</summary><ul className="resource-list">{milestone.resources.map(resource=><li key={resource.url}><a href={resource.url} target="_blank" rel="noopener noreferrer">{resource.title}<span className="sr-only"> (opens in a new tab)</span></a></li>)}</ul></details>}
     </section>
     <section role="tabpanel" id="panel-work" aria-labelledby="tab-work" hidden={tab!=="work"}>

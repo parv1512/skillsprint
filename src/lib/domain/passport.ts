@@ -6,6 +6,13 @@ export const passportEvidenceSchema = z.object({ id: z.uuid(), projectId: z.uuid
 export const passportSkillSchema = z.object({ skillId: canonicalSkillSchema, status: skillStatusSchema, preference: reviewPreferenceSchema, lastDemonstratedAt: z.string().nullable(), evidence: z.array(passportEvidenceSchema) });
 export const passportSchema = z.array(passportSkillSchema);
 export type PassportSkill = z.infer<typeof passportSkillSchema>;
+export function recordedMilestoneSkills(skills: PassportSkill[], projectId: string, milestoneId: string, work: string) {
+  if (!work.trim()) return [];
+  return skills.filter(skill => skill.status !== "new" && skill.evidence.some(item =>
+    item.kind === "student-work" && item.skillId === skill.skillId && item.projectId === projectId &&
+    item.milestoneId === milestoneId && item.snapshot.trim() === work.trim()
+  )).map(({skillId,status}) => ({skillId,status}));
+}
 export const targetedCheckSchema = z.object({ question: z.string().trim().min(10).max(2000) }).strict();
 export function evidenceStatus(items: { kind: string }[]) {
   const practical = items.some(item => item.kind === "student-work");

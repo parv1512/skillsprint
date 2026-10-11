@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { applyStudentSave, cleanImportedProject } from "../src/lib/server/project-policy";
-import { evidenceStatus } from "../src/lib/domain/passport";
+import { evidenceStatus, passportSkillSchema, recordedMilestoneSkills } from "../src/lib/domain/passport";
 import { emptyActivity } from "../src/lib/domain/learning";
 import { sessionProjectSchema } from "../src/lib/projects/store";
 import { handleWorkspace } from "../src/lib/server/workspace-handler";
@@ -19,6 +19,18 @@ function dependencies(owned = true) {
   return {repo, identity: vi.fn().mockResolvedValue("auth0|student-a"), repository: vi.fn().mockResolvedValue(repo as unknown as WorkspaceRepository), generate: vi.fn().mockResolvedValue(passed)};
 }
 describe("authenticated workspace and evidence", () => {
+  it("announces only server-recorded practical skills for the completed milestone and saved submission", () => {
+    const practical={id:checkId,projectId,milestoneId:"one",skillId:"react.state",kind:"student-work",snapshot:"Saved implementation",createdAt:"2026-10-10T01:00:00Z",projectTitle:"Planner"};
+    const record=passportSkillSchema.parse({skillId:"react.state",status:"practiced",preference:"refresher",lastDemonstratedAt:null,evidence:[practical]});
+    expect(recordedMilestoneSkills([record],projectId,"one"," Saved implementation ")).toEqual([{skillId:"react.state",status:"practiced"}]);
+    expect(recordedMilestoneSkills([record],projectId,"two","Saved implementation")).toEqual([]);
+    expect(recordedMilestoneSkills([record],checkId,"one","Saved implementation")).toEqual([]);
+    expect(recordedMilestoneSkills([record],projectId,"one","Different unsaved work")).toEqual([]);
+    expect(recordedMilestoneSkills([record],projectId,"one"," ")).toEqual([]);
+    expect(recordedMilestoneSkills([{...record,status:"mastered",evidence:[{...record.evidence[0],kind:"ai-check"}]}],projectId,"one","Saved implementation")).toEqual([]);
+    const mastered=passportSkillSchema.parse({...record,status:"mastered",evidence:[practical,{...practical,kind:"ai-check",snapshot:"Passed exact-skill Passport check"}]});
+    expect(recordedMilestoneSkills([mastered],projectId,"one","Saved implementation")).toEqual([{skillId:"react.state",status:"mastered"}]);
+  });
   it("keeps callback diagnostics private and rejects external return URLs", () => {
     expect(safeAuthReason({code: "authorization_code_grant_error", cause: {code: "invalid_client", message: "private secret"}})).toBe("invalid_client");
     expect(safeAuthReason({code: "<script>private</script>", cause: {code: "secret"}})).toBe("callback_error");

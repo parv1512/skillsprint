@@ -14,11 +14,11 @@ type Workspace = {
   authenticated: boolean;
   accountLabel: string | null;
   passport: PassportSkill[];
-  refreshPassport: () => Promise<void>;
+  refreshPassport: () => Promise<PassportSkill[]>;
   refreshWorkspace: () => Promise<void>;
   sessionProjects: SessionProject[];
   importSessionProjects: () => Promise<void>;
-  saveProject: (project: SessionProject) => Promise<void>;
+  saveProject: (project: SessionProject) => Promise<PassportSkill[]>;
   loadProject: (id: string) => Promise<SessionProject | null>;
 };
 const ProjectContext = createContext<Workspace | null>(null);
@@ -33,7 +33,11 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   const [accountLabel, setAccountLabel] = useState<string | null>(null);
   const [passport, setPassport] = useState<PassportSkill[]>([]);
   const [sessionProjects, setSessionProjects] = useState<SessionProject[]>([]);
-  const refreshPassport = useCallback(async () => { setPassport(passportSchema.parse((await workspaceFetch("/api/passport")).skills)); }, []);
+  const refreshPassport = useCallback(async () => {
+    const skills=passportSchema.parse((await workspaceFetch("/api/passport")).skills);
+    setPassport(skills);
+    return skills;
+  }, []);
   const refreshWorkspace = useCallback(async () => {
     setReady(false); setError(null); setAccountLabel(null);
     try {
@@ -68,7 +72,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     await store.saveProject(project);
     setProjects(await store.listProjects());
     setError(null);
-    await refreshPassport();
+    return refreshPassport();
   }, [store, refreshPassport]);
   const loadProject = useCallback(async (id: string) => {
     if (!store && mode === "preview") return projects.find(project => project.id === id) ?? null;

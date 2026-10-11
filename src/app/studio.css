@@ -166,7 +166,10 @@ body { font-family: var(--font-ui); }
 .check-format label, .check-options label { display: flex; align-items: flex-start; gap: 8px; font-size: 15px; line-height: 1.8; cursor: pointer; }
 .check-format input, .check-options input { margin-top: 5px; accent-color: var(--green); }
 .check-options { margin: 24px 0; }
-.check-options label { padding: 8px 0; }
+.check-options label { padding: 8px 12px; border-left: 3px solid transparent; }
+.check-options .check-option-correct { background: #e0eadc; border-left-color: var(--green); color: #214d39; }
+.check-options .check-option-wrong { background: #f4e8df; border-left-color: var(--error); color: #753127; }
+.check-option-label { display: block; font-weight: 600; }
 .milestone-knowledge-check > .form-field { margin-top: 24px; }
 @media (max-width: 700px) { .passport-record-heading { flex-direction: column; } }
 .guided-build { padding: 8px 0 26px; border-bottom: 1px solid var(--line); margin-bottom: 24px; }

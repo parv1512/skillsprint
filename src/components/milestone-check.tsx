@@ -24,7 +24,11 @@ export function MilestoneCheck({activity, question, busy, chooseFormat, createQu
     <p className="quiet-note">Changing the format saves your choice. Create a question when ready.</p>
     <button className="button button-secondary" disabled={busy} onClick={createQuestion}>{multiple ? quiz ? "Create another multiple-choice question" : "Create multiple-choice question" : "Create short-answer question"}</button>
     {multiple ? quiz ? <>
-      <fieldset className="check-options" data-check-question tabIndex={-1}><legend>{quiz.question}</legend>{quiz.options.map((option, index) => <label key={index}><input type="radio" name="milestone-check-option" checked={(answered ? activity.multipleChoiceAnswer : selected) === index} disabled={busy || answered} onChange={() => setSelected(index)} /><span>{String.fromCharCode(65 + index)}. {option}</span></label>)}</fieldset>
+      <fieldset className="check-options" data-check-question tabIndex={-1}><legend>{quiz.question}</legend>{quiz.options.map((option, index) => {
+        const correct = answered && index === quiz.correctOption;
+        const wrong = answered && index === activity.multipleChoiceAnswer && !correct;
+        return <label key={index} className={correct ? "check-option-correct" : wrong ? "check-option-wrong" : undefined}><input type="radio" name="milestone-check-option" checked={(answered ? activity.multipleChoiceAnswer : selected) === index} disabled={busy || answered} onChange={() => setSelected(index)} /><span>{String.fromCharCode(65 + index)}. {option}{(correct || wrong) && <strong className="check-option-label">{correct ? "Correct answer" : "Your answer"}</strong>}</span></label>;
+      })}</fieldset>
       {!answered && <button className="button button-primary" disabled={busy || selected === null} onClick={() => selected !== null && checkAnswer(selected)}>Check answer</button>}
       {answered && <div className="notice" role="status" data-check-result tabIndex={-1}><strong>{gradeMultipleChoice(quiz, activity.multipleChoiceAnswer!) ? "Correct" : "Keep practicing"} · App-graded</strong><p>Correct option: {String.fromCharCode(65 + quiz.correctOption)}. {quiz.options[quiz.correctOption]}</p><p>{quiz.explanation}</p></div>}
     </> : <p className="quiet-note">Create a multiple-choice question to begin.</p> : <>
