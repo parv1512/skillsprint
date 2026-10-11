@@ -79,4 +79,6 @@ Auth0, Gemini, and database secrets stay on the server. Tiger Data enforces one 
 
 GitHub source of truth: https://github.com/parv1512/skillsprint. Work is reviewed in phases. Report checks before committing and obtain product-owner approval before pushing. Never force-push or commit secrets.
 
+Vercel is connected to this repository. Pushing to `main` starts a production deployment at https://skillsprint-inky.vercel.app; other branches can create preview deployments. Production credentials are configured only for production, so previews do not automatically have working sign-in, database, or Gemini access. Review any database migration separately before pushing a change that depends on it. Check the deployment reaches Ready before considering the website updated.
+
 See [build status](docs/BUILD_STATUS.md) and [architecture](docs/ARCHITECTURE.md).

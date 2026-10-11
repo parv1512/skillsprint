@@ -20,7 +20,9 @@ Auth0's existing Regular Web Application must allow https://skillsprint-inky.ver
 
 Review source and tests first. Apply reviewed additive migrations with `npm run db:migrate` using the configured local connection. Migration is deliberate, not part of every serverless cold start. The Phase 6 migration adds only `skillsprint_ai_usage`; it was applied before launch.
 
-Deploy the linked project with `npx --yes vercel@63.1.2 deploy --prod --yes`. Do not use `vercel pull` or repeat interactive linking unless you intend to download environment values. `.vercelignore` excludes environment files, local build outputs, dependencies, and temporary artifacts. Git commits/pushes remain separate owner-approved actions; this initial CLI deployment includes reviewed, uncommitted Phase 6 source.
+The Vercel project is connected to `parv1512/skillsprint`, with `main` as its production branch. For normal website updates: test locally, commit the reviewed changes, push to `main`, and wait for the Vercel deployment to reach Ready. The stable public URL stays the same. Production variables are configured only for production; a branch preview needs its own deliberate credential and Auth0 setup before protected features can work.
+
+The manual fallback is `npx --yes vercel@63.1.2 deploy --prod --yes`. Do not use `vercel pull` or repeat interactive linking unless you intend to download environment values. `.vercelignore` excludes environment files, local build outputs, dependencies, and temporary artifacts. Git commits/pushes remain owner-approved actions. The initial CLI deployment used uncommitted source; that source was subsequently committed and pushed as 31a01f4.
 
 Verify the stable URL, sign-in, an owned project, Passport, reload persistence, and one explicit AI request after any configuration change. Provider quota can fail independently of the deployment. Never log secrets, callback codes, raw credentials, or submitted private work for diagnosis.
 

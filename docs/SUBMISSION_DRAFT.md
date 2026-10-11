@@ -38,7 +38,7 @@ See BUILD_STATUS.md for actual checks. The AI provider can fail or exhaust quota
 
 Repository: https://github.com/parv1512/skillsprint
 
-Official [event](https://hacklanta.devpost.com/) and [rules](https://hacklanta.devpost.com/rules): deadline October 11, 2026 at 9:00 a.m. Eastern. Confirm team roster, technology list, preexisting-work disclosure, repository access, and judge sign-in instructions before submitting. The initial deployment contains uncommitted Phase 6 updates; request the reviewed commit/push checkpoint before representing GitHub as the exact deployed source.
+Official [event](https://hacklanta.devpost.com/) and [rules](https://hacklanta.devpost.com/rules): deadline October 11, 2026 at 9:00 a.m. Eastern. Confirm team roster, technology list, preexisting-work disclosure, repository access, and judge sign-in instructions before submitting. Phase 6 source was committed and pushed as 31a01f4; Vercel is now connected to main for subsequent deployments. Confirm the latest production build is Ready before recording.
 
 Judges can use Sign in on the public demo to create their own student account. Auth0 dashboard accounts are separate. Every account owns its projects; retained demonstration projects are private to the demo account. Do not publish the owner's credentials. Show those projects in the video, or create a separate judge demonstration account manually if needed.
 
