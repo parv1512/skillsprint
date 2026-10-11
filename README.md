@@ -1,84 +1,167 @@
 # SkillSprint
 
-Build real projects, learn with guidance, and carry demonstrated skills into your next idea.
+**Build a real project. Carry what you learn into the next one.**
 
-## Current state
+[Live app](https://skillsprint.study) · [Architecture](docs/ARCHITECTURE.md) · [Demo guide](docs/PHASE_6_DEMO.md) · [Verification](docs/BUILD_STATUS.md)
 
-Public demo: **https://skillsprint-inky.vercel.app**. Vercel deployment, Auth0 sign-in, stored project loading, and real Gemini roadmap/lesson generation are verified. The Project A → Passport → Project B flow uses retained labeled demonstration work. Follow [the presentation guide](docs/PHASE_6_DEMO.md), [deployment guide](docs/DEPLOYMENT.md), [submission draft](docs/SUBMISSION_DRAFT.md), and [verification record](docs/BUILD_STATUS.md). Hacklanta video recording and submission remain owner actions.
+SkillSprint helps students turn a software idea into a project they can build in their own editor. Gemini creates a roadmap and practical building steps. A Learning Passport records demonstrated skills and connects them to the projects where they were used. When another project needs those skills, new lessons shorten familiar introductions and focus on applying them.
 
-Student-confirmed completion and AI-reviewed explanations are separate records. Practiced requires a saved practical submission and completion confirmation. Mastered additionally requires a passed check targeting the same canonical skill. Neither lesson views nor a tutor reply awards skill mastery. Code snippets are not executed by SkillSprint.
+**SkillSprint does not execute student code or certify that a project works.** Students build and run their projects in their own editor and browser.
 
-## Local development
+## Why SkillSprint?
 
-Use Node.js 24 (verified with 24.11.1) and npm (verified with 11.6.2). The pinned test tooling and live checks use this runtime.
+Students often know what they want to build but struggle to decide what to write next. Tutorials also tend to start over when a student moves to another project. SkillSprint combines a clear next edit with persistent learning evidence, so guidance can build on previous work.
+
+## Features
+
+- **Personalized roadmaps:** project idea, experience, available hours, existing knowledge, and optional stack become ordered milestones with dependencies, tasks, and completion criteria.
+- **Guided building steps:** each step names a file, an edit, an expected result, and a manual check. Confirmed steps can be revisited; later steps remain locked until the current step is confirmed.
+- **Starter files:** explicitly generate a skeleton, inspect formatted multiline source, copy individual files, or download a ZIP for your editor.
+- **Contextual Copilot:** hints, explanations, debugging, reviews, and examples use the current milestone and work. Guided help prepares a question; the student chooses when to send it. Full solutions remain an explicit mode.
+- **Knowledge checks:** multiple-choice or short-answer milestone practice, plus separate written Passport checks for individual skills.
+- **Cross-project memory:** recognize canonical skills, show their source projects and status, and shorten familiar introductions in new lessons. Optional concept notes remain available.
+- **Account-backed persistence:** Auth0 sign-in and Tiger Data storage preserve projects, guidance, submissions, assessments, conversations, and evidence.
+
+## Learning evidence
+
+| Status | Required evidence |
+| --- | --- |
+| New | No qualifying practical demonstration recorded |
+| Practiced | Saved practical work and student-confirmed milestone completion |
+| Mastered | Qualifying practical work plus a passed written Passport check for that exact skill |
+
+Practical evidence is labeled **student-confirmed work**. Written checks are labeled **AI-reviewed understanding**. Lesson views, starter files, Copilot replies, guided-step confirmations, and multiple-choice milestone passes do not award Passport mastery. Confirming a step does not complete a milestone.
+
+Previous evidence does not complete a new project's tasks. Each project keeps independent progress. A new or failed check does not erase a previously saved pass. Passport records link to supporting projects and evidence.
+
+## Try the live app
+
+1. Open **[skillsprint.study](https://skillsprint.study)** and choose **Sign in**. Use the options available in Auth0 Universal Login; an Auth0 dashboard account is separate from a student login.
+2. Choose **New project**, describe your idea and existing knowledge, and create a roadmap.
+3. Open a milestone's **Build** tab. Explicitly create starter files or building steps, then make the edits in Cursor, VS Code, or another editor. Run and check the project yourself.
+4. Use **Give me a hint**, **Explain this**, or **Paste code for a review** when needed. Prepared questions wait for **Ask copilot**; they are not sent automatically.
+5. Save practical work in **Your work**, confirm the criteria, and mark the milestone complete. Inspect the Passport evidence and explicitly take a written Passport check to demonstrate understanding of a specific skill.
+6. Create another project using that skill. Look for the practiced-skill banner and source-project link; generate a new lesson to see adapted guidance.
+
+The original [Vercel address](https://skillsprint-inky.vercel.app) remains available. The custom domain has its own session cookie, so your first visit may require sign-in. The same account retains the same saved data.
+
+## Technology and architecture
+
+| Technology | Role |
+| --- | --- |
+| Next.js 16, React 19, TypeScript | Interface and authenticated Node API routes |
+| Gemini API | Structured roadmaps, lessons, starter skeletons, questions, and coding assistance |
+| Auth0 | Universal Login and server-managed sessions |
+| Tiger Data PostgreSQL | Projects, activities, assessments, evidence, skill records, and shared AI limits |
+| Drizzle ORM and node-postgres | Reviewed migrations and ownership-scoped database operations |
+| Zod | Runtime validation of inputs and generated responses |
+| Prettier | Consistent display, copying, and export of supported starter source |
+| Vercel | Production hosting and deployments from GitHub |
+| Porkbun | DNS management for skillsprint.study |
+
+The server derives ownership from the Auth0 session. Browser-supplied owner IDs, AI reviews, and skill statuses cannot authorize access or create trusted evidence. Generated responses are validated before saving. Secrets stay on the server; remote database connections verify TLS certificates and hostnames.
+
+See [ARCHITECTURE.md](docs/ARCHITECTURE.md) for the request flow and evidence boundaries.
+
+## Run locally
+
+### 1. Install
+
+Use **Node.js 24** and npm. Verification used Node 24.11.1 and npm 11.6.2.
 
 ```sh
+git clone https://github.com/parv1512/skillsprint.git
+cd skillsprint
 npm ci
+```
+
+### 2. Configure services
+
+Copy `.env.example` to `.env.local`. In PowerShell:
+
+```powershell
+Copy-Item .env.example .env.local
+```
+
+Fill these values locally using authorized service credentials:
+
+| Variable | Purpose |
+| --- | --- |
+| APP_BASE_URL | http://127.0.0.1:3000 for local development |
+| AUTH0_DOMAIN | Auth0 tenant domain |
+| AUTH0_CLIENT_ID, AUTH0_CLIENT_SECRET | Credentials from the same Regular Web Application |
+| AUTH0_SECRET | Independently generated random session secret |
+| DATABASE_URL | Tiger Data PostgreSQL connection URL |
+| GEMINI_API_KEY | Gemini API key |
+| GEMINI_MODEL | An account-accessible model; configured default: gemini-3.5-flash-lite |
+
+For a new installation, generate a fresh session secret in your own terminal and save it only in `.env.local`:
+
+```sh
+node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"
+```
+
+In your Auth0 Regular Web Application, add:
+
+- **Allowed Callback URLs:** `http://127.0.0.1:3000/auth/callback`
+- **Allowed Logout URLs:** `http://127.0.0.1:3000`
+
+Use the exact origin: `localhost` and `127.0.0.1` are different. Keep credentials and generated secrets out of Git, screenshots, and chat. Follow [service setup](docs/PHASE_4_SETUP.md) for local database CA-file configuration and [deployment setup](docs/DEPLOYMENT.md) for hosted PEM trust through DATABASE_CA_CERT. Do not disable certificate validation.
+
+### 3. Initialize and start
+
+```sh
+npm run db:check
+npm run db:migrate
 npm run dev
 ```
 
-Open http://127.0.0.1:3000. Copy `.env.example` to `.env.local`, configure Auth0 and DATABASE_URL using [the setup guide](docs/PHASE_4_SETUP.md), and set GEMINI_API_KEY and an account-accessible GEMINI_MODEL (default: gemini-3.5-flash-lite). Never paste secrets into chat or commit environment files. The shell opens without credentials, but all storage and AI endpoints require sign-in.
+Open **http://127.0.0.1:3000**. Migrations apply reviewed additive SQL from `drizzle/`; they do not run on every request. The shell can render without credentials, but new saves and AI requests require configured services and sign-in.
 
-Signed-in projects use Tiger Data PostgreSQL. Existing browser-session projects are preserved and can be explicitly imported into your account; historical AI reviews and completion reset during import and do not become trusted Passport evidence. Without Auth0 configuration, existing session projects are viewable but new saves and AI calls are refused.
+Legacy browser-session projects can be explicitly imported into an account. Import retains notes and roadmaps but resets completion and removes untrusted historical AI artifacts; it does not convert them into Passport evidence.
 
-The storage interface lives in `src/lib/projects/store.ts`; `remote-store.ts` supplies authenticated server-backed storage behind the same UI calls. Server queries derive ownership from the Auth0 session. Client-written AI reviews and Passport status are never trusted.
+## Checks and verification
 
 ```sh
 npm test
 npm run typecheck
 npm run build
-npm start
 ```
 
-`npm start` serves the production build after `npm run build`. Configure the exact APP_BASE_URL callback/logout origin for each environment. Remote database connections enforce certificate-verified TLS. `npm run db:check` verifies connectivity, and `npm run db:migrate` applies the reviewed additive schema. Production uses Vercel; its PEM CA trust configuration is described in the deployment guide.
+Default tests do not call Gemini. They cover validation, provider failures, timeouts, ownership, evidence rules, independent progress, and quota behavior. After building, `npm start` serves a local production build.
 
-Default tests do not call Gemini. They check validation, provider failures, timeouts, session persistence, and independent project progress. To run the opt-in live test in PowerShell (consumes Gemini quota):
+The October 11, 2026 checkpoint passed **95 offline tests** and **7 opt-in database integration tests**, plus the production build. Nine optional live cases were skipped in the default suite. Real production sign-in, Gemini roadmap/lesson/Copilot generation, persistence, skill reuse, and desktop/phone rendering were separately verified. The custom domain's HTTPS, sign-in, and saved account data were also checked. See [BUILD_STATUS.md](docs/BUILD_STATUS.md) for the actual results and limitations.
 
-```powershell
-$env:SKILLSPRINT_LIVE_TEST = '1'
-npm test -- tests/gemini.live.test.ts
-Remove-Item Env:\SKILLSPRINT_LIVE_TEST
-```
+Optional suites are enabled with `SKILLSPRINT_LIVE_TEST=1`, `SKILLSPRINT_DATABASE_TEST=1`, or `SKILLSPRINT_LEARNING_LIVE_TEST=1`, as described in the verification record. AI live tests consume quota. Database tests use isolated synthetic records and clean them afterward. `node scripts/check-gemini.mjs` checks model availability without generating content; `--probe` makes generation requests.
 
-The live test writes its non-sensitive sample roadmap to ignored `.tmp/live-roadmap.json`. A read-only model availability check is available with `node scripts/check-gemini.mjs`. Adding `--probe` sends two small generation requests and consumes quota.
+## Deployment and limits
 
-Additional optional checks: set SKILLSPRINT_DATABASE_TEST=1 to run tests/database.live.test.ts, or SKILLSPRINT_LEARNING_LIVE_TEST=1 to run tests/learning.live.test.ts. The database suite creates two isolated synthetic profiles and removes only their records afterward. The learning suite makes one real targeted question/review pair and awards no student evidence. The Vitest server-only alias is test-only; production still uses Next.js server boundaries.
+Vercel is connected to **parv1512/skillsprint**, with **main** as the production branch. Updates follow **edit → test → commit → push to main → wait for Vercel Ready**. The custom domain and original Vercel address both serve production. Apply required reviewed database migrations separately before deploying dependent code.
 
-Ordinary help and knowledge checks use low reasoning on the approved Flash model; lessons, starter files, and full solutions keep default reasoning. Checks use focused context and concise response budgets. Quizzes/reviews can take up to two minutes. Gemini has intermittently returned 503/timeouts during verification; retries are explicit, never automatic, and failures do not create passing evidence.
+Production credentials are stored privately in Vercel; local environment files are not uploaded. Branch previews do not automatically have production credentials or matching Auth0 settings. See [DEPLOYMENT.md](docs/DEPLOYMENT.md) for domain and release details.
 
-## Try the learning workspace
+- Tiger Data enforces **one active AI request and 30 attempts per student per ten minutes** across instances. This is a per-student limit, not a global daily budget.
+- Gemini can exhaust quota, time out, or return unavailable responses. Requests and retries are explicit; failures do not create passing evidence. Saved real responses can be replayed, with their origin made clear.
+- AI guidance and reviews can be imperfect. They are not executed-code verification or independent skill certification.
+- Another already-open tab needs a reload to see new saves; live multi-tab synchronization is not implemented.
 
-1. Create or open a project and select a milestone.
-2. In **Build**, get starter files, extract the ZIP, open the folder in your editor, and follow the setup instructions. Supported files display as indented multiline code with line numbers; copied and downloaded source uses the same formatting. SkillSprint does not execute the generated code.
-3. Create or preview building steps. Follow one precise edit at a time: the file to change, the concept, expected result, and how to check it. Give me a hint and Explain this prepare contextual Copilot questions. Paste code for a review opens the notes section; Review this step prepares a review question without sending it. Save attempt stores your notes. I finished this step saves student-confirmed step progress. Read [the guided workspace guide](docs/GUIDED_BUILD.md) for old-project compatibility and formatting limits.
-4. In **Your work**, review the original tasks, saved code/notes, and criteria. Confirm each criterion to mark the milestone complete. Prerequisites must be completed first. Setup and guided-step confirmations do not complete milestones or award mastery.
-5. Answer the check and choose **Check understanding** for an explicitly labeled AI review. Editing the answer clears the previous review.
-6. In **Copilot**, ask for a hint, explanation, debugging help, code review, or a short example. **Full solution** is an explicit mode. Current work and up to 12 recent messages are sent as context.
+## Hacklanta demo and disclosure
 
-Use **Save work** before navigating away. Saved lessons, work, assessments, conversations, and progress persist in your signed-in account. In **Your work → Passport skill check**, choose a specific skill to demonstrate understanding. The general milestone check is feedback rather than evidence for every skill. Passport records link to supporting projects. Known skills appear above the building steps with their Passport status and earlier project. The closed Concept notes and example dropdown stays available for review. Take the Passport check opens the targeted written check on Your work; generating a question remains explicit. Practical progress in each project stays independent.
+The central demonstration is **Project A → practical evidence → Learning Passport → Project B with recognized skills and adapted introductions**. Follow the [2–3 minute demo guide](docs/PHASE_6_DEMO.md) and [submission draft](docs/SUBMISSION_DRAFT.md).
 
-Completed milestones retain evidenced skill statuses and a View Learning Passport link under their title. Milestone multiple-choice answers keep their options visible and label correct and incorrect answers; they do not change Passport status. Reload a second open tab to see work saved in another tab. Retained Phase 5 demonstration submissions are labeled Codex-written samples and are not claims about the account owner's learning.
+Retained demonstration submissions are labeled Codex-written samples, not claims about the account owner's learning. Gemini generated the retained roadmaps, lessons, starter skeletons, and AI reviews. Codex assisted implementation, verification, and sample code. Any documented sample execution happened separately from SkillSprint. The team must supply its actual roster, video link, and build-timeline/preexisting-work disclosure before submission.
 
-## Structure
+## Repository map
 
-- `src/app`: pages, layout, loading and error boundaries, global design styles.
-- `src/components`: reusable application shell, icons, and empty states.
-- `src/lib/domain`: canonical skills, shared contracts and Zod validation.
-- `src/lib/ai`: Gemini structured generation and safe provider errors.
-- `src/lib/server`: request validation and origin checks.
-- `src/lib/projects`: storage interface, validation, remote and legacy session adapters.
-- `src/lib/db`: seven learning tables, one shared AI quota table, ownership-scoped repository, and TLS connection configuration.
-- `src/lib/auth.ts` and `src/proxy.ts`: Auth0 server sessions and authentication routing.
-- `drizzle`: reviewed additive SQL migrations and metadata.
-- `tests`: behavioral validation checks.
-- `docs`: build status, phase checkpoints, and planned service boundaries.
-
-Auth0, Gemini, and database secrets stay on the server. Tiger Data enforces one active AI request and 30 attempts per student per ten minutes across Vercel instances. New lessons shorten introductions for practiced/mastered skills supported by practical work in another project; implementation tasks and optional concept notes remain.
-
-## Development workflow
-
-GitHub source of truth: https://github.com/parv1512/skillsprint. Work is reviewed in phases. Report checks before committing and obtain product-owner approval before pushing. Never force-push or commit secrets.
-
-Vercel is connected to this repository. Pushing to `main` starts a production deployment at https://skillsprint-inky.vercel.app; other branches can create preview deployments. Production credentials are configured only for production, so previews do not automatically have working sign-in, database, or Gemini access. Review any database migration separately before pushing a change that depends on it. Check the deployment reaches Ready before considering the website updated.
-
-See [build status](docs/BUILD_STATUS.md) and [architecture](docs/ARCHITECTURE.md).
+| Path | Contents |
+| --- | --- |
+| src/app | Pages, authenticated API routes, and styles |
+| src/components | Roadmap, guided workspace, Copilot, checks, Passport, and shell |
+| src/lib/domain | Canonical skills, contracts, and validation |
+| src/lib/ai | Gemini generation, prompts, and provider error handling |
+| src/lib/server | Request policy, authentication boundaries, and quota wrapper |
+| src/lib/projects | Storage adapters, progress, and source formatting |
+| src/lib/db | Schema, owned records, shared quota storage, and TLS |
+| drizzle | Reviewed additive migrations |
+| tests | Offline and explicitly enabled live checks |
+| docs | Architecture, deployment, demo, and verification material |

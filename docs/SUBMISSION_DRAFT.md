@@ -31,7 +31,7 @@ See BUILD_STATUS.md for actual checks. The AI provider can fail or exhaust quota
 
 - Hacklanta, AI/ML track; intended sponsor integrations: Gemini, Auth0, and Tiger Data. Confirm challenge selections in Devpost.
 - Team names and roles.
-- Public demo: https://skillsprint-inky.vercel.app.
+- Public demo: https://skillsprint.study (original Vercel address: https://skillsprint-inky.vercel.app).
 - Final demo video URL; owner confirmed a 2–3 minute video.
 - Required screenshots and submission fields.
 - Final deployment and acceptance-check results.

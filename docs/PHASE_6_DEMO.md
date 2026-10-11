@@ -4,7 +4,7 @@ This guide describes the current interface. Retained demonstration work is expli
 
 ## Prepare before recording
 
-1. Open https://skillsprint-inky.vercel.app and verify sign-in before recording.
+1. Open https://skillsprint.study and verify sign-in before recording.
 2. Use the owner-approved demo account. Another account cannot access its private projects. Keep sign-in credentials, environment settings, browser callback codes, and account setup screens out of the recording.
 3. Open Project A, the Passport, and Project B. Check that saved responses and evidence are available. Confirm provider availability before planning a live generation.
 4. Use the actual milestone and skill names; Gemini wording may vary. Do not complete criteria that the demonstration work does not support.

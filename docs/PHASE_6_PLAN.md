@@ -1,6 +1,6 @@
 # Phase 6: polish and submission
 
-Status: production deployed at https://skillsprint-inky.vercel.app. Public sign-in and account-backed project loading are verified. Live generation and final presentation checks are recorded in BUILD_STATUS.md. Recording and submitting the video remain owner actions.
+Status: production deployed at https://skillsprint.study, with the original Vercel address retained. Public sign-in and account-backed project loading are verified. Live generation and final presentation checks are recorded in BUILD_STATUS.md. Recording and submitting the video remain owner actions.
 
 ## Objective
 
@@ -14,7 +14,7 @@ Ship the existing SkillSprint experience, verify its production configuration, a
 | Responsive and keyboard audit | Desktop/390px rendering inspected; tab/focus handoff verified. Earlier rail keyboard checks retained; no full screen-reader audit claimed |
 | Failure and empty states | Offline provider/storage/authorization cases passed; signed-out and unknown-project copy inspected |
 | Production build and dependency audit | Local and Vercel builds passed; 95 offline tests, seven opt-in database tests, zero production vulnerabilities |
-| Hosting | Vercel approved and deployed; GoDaddy domain registration deferred |
+| Hosting | Vercel deployed; owner-registered skillsprint.study connected through Porkbun DNS |
 | AI request controls | Approved additive Tiger Data quota table enforces limits across instances; concurrency/expiry tests passed |
 | Database trust | Owner approved the existing CA pin for the hackathon deployment; portable trust and verified TLS passed |
 | Learning adaptation | Approved automatic shortening for practiced/mastered skills with practical evidence in another project; practical tasks remain |
