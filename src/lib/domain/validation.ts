@@ -10,7 +10,7 @@ export const projectIntakeSchema = z.object({
   experience: z.enum(["beginner", "some-experience", "intermediate"]),
   preferredStack: z.string().trim().max(200).optional(),
   availableHours: z.number().finite().min(1).max(1000),
-  existingKnowledge: z.string().trim().min(3).max(1000),
+  existingKnowledge: z.string().trim().min(3, "List a skill you already know, or enter ‘None yet’ if you’re starting out.").max(1000),
 }).strict();
 
 export const resourceSchema = z.object({

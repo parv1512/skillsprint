@@ -8,7 +8,7 @@ import { RoadmapView } from "./roadmap-view";
 import { LearningWorkspace } from "./learning-workspace";
 
 export function ProjectRoadmap({ id }: { id: string }) {
-  const { ready, loadProject, projects } = useProjects();
+  const { ready, loadProject, projects, mode, error: workspaceError } = useProjects();
   const [project, setProject] = useState<SessionProject | null>(null);
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -21,7 +21,11 @@ export function ProjectRoadmap({ id }: { id: string }) {
     return () => { active = false; };
   }, [id, ready, loadProject]);
   if (!loaded) return <p role="status" className="loading-state">Opening your roadmap…</p>;
-  if (!project) return <section className="studio-empty"><p className="eyebrow">PROJECT UNAVAILABLE</p><h1>This project couldn’t be opened.</h1><p role={error ? "alert" : undefined}>{error ?? "Check that you’re signed into the account that owns this project."}</p><Link href="/projects" className="button button-primary">Back to projects</Link></section>;
+  if (!project) {
+    const signedOut = mode === "signed-out";
+    const message = signedOut ? "Check that you’re signed into the account that owns this project." : workspaceError ?? error ?? "Project not found.";
+    return <section className="studio-empty"><p className="eyebrow">PROJECT UNAVAILABLE</p><h1>{!signedOut && !workspaceError && !error ? "Project not found" : "This project couldn’t be opened."}</h1><p role={error || workspaceError ? "alert" : undefined}>{message}</p><Link href="/projects" className="button button-primary">Back to projects</Link></section>;
+  }
   const current = projects.find((item) => item.id === id) ?? project;
   return <><Link href="/projects" className="text-link back-link">← All projects</Link><RoadmapView roadmap={current.roadmap} completedIds={current.completedMilestoneIds} renderLearning={(milestone) => <LearningWorkspace key={milestone.id} project={current} milestone={milestone} />} /></>;
 }

@@ -3,7 +3,7 @@ import type { WorkspaceRepository } from "../db/repository";
 import { sessionProjectSchema } from "../projects/store";
 import { canonicalSkillSchema, targetedCheckSchema } from "../domain/passport";
 import { reviewPreferenceSchema } from "../domain/validation";
-import { emptyActivity, learningRequestSchema, lessonSchema, reviewSchema, tutorModeSchema, tutorReplySchema, type LearningRequest } from "../domain/learning";
+import { emptyActivity, multipleChoiceQuestionSchema, learningRequestSchema, lessonSchema, reviewSchema, tutorModeSchema, tutorReplySchema, type LearningRequest } from "../domain/learning";
 import { starterSchema } from "../domain/starter";
 import { WorkspaceError } from "./errors";
 import { RoadmapError } from "../ai/roadmap";
@@ -24,14 +24,20 @@ export function safeFailure(error: unknown) {
   if (error instanceof z.ZodError) return Response.json({error: "Check the submitted details."}, {status: 400, headers: {"Cache-Control": "no-store"}});
   return Response.json({error: "Your workspace is temporarily unavailable. Your input is still here; please retry."}, {status: 503, headers: {"Cache-Control": "no-store"}});
 }
-const learningBody = z.object({ projectId: z.uuid(), revision: z.number().int().nonnegative().default(0), milestoneId: z.string().min(1).max(80), action: z.enum(["lesson", "tutor", "check", "starter"]), mode: tutorModeSchema.optional(), question: z.string().trim().max(2000).default(""), work: z.string().max(12000).default(""), answer: z.string().trim().max(4000).default("") }).strict();
+const learningBody = z.object({ projectId: z.uuid(), revision: z.number().int().nonnegative().default(0), milestoneId: z.string().min(1).max(80), action: z.enum(["lesson", "tutor", "check", "starter", "milestone-quiz"]), mode: tutorModeSchema.optional(), question: z.string().trim().max(2000).default(""), work: z.string().max(12000).default(""), answer: z.string().trim().max(4000).default("") }).strict();
 const checkBody = z.discriminatedUnion("action", [
   z.object({action: z.literal("generate"), projectId: z.uuid(), milestoneId: z.string().min(1).max(80), skillId: canonicalSkillSchema}).strict(),
   z.object({action: z.literal("review"), checkId: z.uuid(), answer: z.string().trim().min(3).max(4000)}).strict(),
 ]);
-function context(project: Awaited<ReturnType<WorkspaceRepository["loadProject"]>> & {}, milestoneId: string) {
+function context(project: Awaited<ReturnType<WorkspaceRepository["loadProject"]>> & {}, milestoneId: string, includePreviousWork = false) {
   const {learningGoals: _legacy, ...intake} = project.intake;
-  return {intake, roadmap: project.roadmap, milestoneId, starter: project.learning?.[project.roadmap.milestones[0].id]?.starter};
+  const previousMilestones = includePreviousWork ? project.roadmap.milestones.slice(0, project.roadmap.milestones.findIndex(item => item.id === milestoneId)).flatMap(milestone => {
+    const activity = project.learning?.[milestone.id];
+    const milestoneConfirmed = project.completedMilestoneIds.includes(milestone.id);
+    const confirmedSteps = (activity?.lesson?.guidedSteps ?? []).filter(step => activity?.completedStepIds.includes(step.id)).map(({title, filePath, instruction, expectedResult}) => ({title, filePath, instruction, expectedResult}));
+    return milestoneConfirmed || confirmedSteps.length ? [{milestoneId: milestone.id, title: milestone.title, skillIds: milestone.skillIds, milestoneConfirmed, tasks: milestoneConfirmed ? milestone.tasks : [], confirmedSteps}] : [];
+  }) : [];
+  return {intake, roadmap: project.roadmap, milestoneId, starter: project.learning?.[project.roadmap.milestones[0].id]?.starter, previousMilestones};
 }
 export async function handleWorkspace(request: Request, operation: "projects" | "project" | "passport" | "preference" | "learning" | "skill-check", dependencies: Dependencies, id?: string) {
   try {
@@ -63,12 +69,15 @@ export async function handleWorkspace(request: Request, operation: "projects" | 
       const {projectId: _projectId, revision: _revision, ...details} = input;
       const priorSkills = await repo.passport();
       const skipSkillIds = priorSkills.filter(record => record.status !== "new" && record.preference === "skip" && milestone.skillIds.includes(record.skillId) && record.evidence.some(item => item.projectId !== project.id && item.kind === "student-work")).map(record => record.skillId);
-      const aiInput = learningRequestSchema.parse({...context(project, input.milestoneId), ...details, skipSkillIds, knowledgeCheck: activity.lesson?.knowledgeCheck ?? milestone.assessmentPrompt, history: activity.messages});
+      const aiInput = learningRequestSchema.parse({...context(project, input.milestoneId, input.action === "lesson"), ...details, skipSkillIds, checkFormat: activity.checkFormat, knowledgeCheck: activity.shortQuestion || activity.lesson?.knowledgeCheck || milestone.assessmentPrompt, history: activity.messages});
       const result = await dependencies.generate(aiInput);
       let update = {};
       if (input.action === "lesson") update = {lesson: lessonSchema.parse(result), review: null, reviewedAnswer: "", completedStepIds: []};
       if (input.action === "starter") update = {starter: starterSchema.parse(result)};
       if (input.action === "check") update = {review: reviewSchema.parse(result), answer: input.answer, reviewedAnswer: input.answer};
+      if (input.action === "milestone-quiz") update = activity.checkFormat === "multiple-choice"
+        ? {multipleChoiceQuestion: multipleChoiceQuestionSchema.parse(result), multipleChoiceAnswer: null}
+        : {shortQuestion: targetedCheckSchema.parse(result).question, answer: "", review: null, reviewedAnswer: ""};
       if (input.action === "tutor") { const reply = tutorReplySchema.parse(result); update = {messages: [...activity.messages, {role: "student", text: `${input.mode}: ${input.question}`}, {role: "tutor", text: reply.explanation, code: reply.code, nextStep: reply.nextStep}].slice(-12)}; }
       const updated = await repo.saveGenerated(project.id, input.milestoneId, project.revision, update);
       value = {result, project: updated};

@@ -13,7 +13,7 @@ export function getAuth0() {
   if (!authConfigured()) throw new Error("Sign-in is not configured. Configure Auth0 in .env.local.");
   const configured = createHash("sha256").update(JSON.stringify([process.env.AUTH0_DOMAIN,process.env.AUTH0_CLIENT_ID,process.env.AUTH0_CLIENT_SECRET,process.env.AUTH0_SECRET,process.env.APP_BASE_URL])).digest("hex");
   if (!client || fingerprint !== configured) {
-    client = new Auth0Client({ enableAccessTokenEndpoint: false, authorizationParameters: { scope: "openid" }, onCallback: async (error, context) => {
+    client = new Auth0Client({ enableAccessTokenEndpoint: false, authorizationParameters: { scope: "openid profile email" }, onCallback: async (error, context) => {
       if (error) {
         const reason = safeAuthReason(error);
         console.error("Sign-in callback failed:", reason);
@@ -29,4 +29,13 @@ export async function getIdentity(): Promise<string | null> {
   if (!authConfigured()) return null;
   const session = await getAuth0().getSession();
   return session?.user.sub ?? null;
+}
+
+export async function getWorkspaceAccount(): Promise<{authenticated: boolean; accountLabel: string | null}> {
+  if (!authConfigured()) return {authenticated: false, accountLabel: null};
+  const session = await getAuth0().getSession();
+  if (!session?.user.sub) return {authenticated: false, accountLabel: null};
+  const email = typeof session.user.email === "string" ? session.user.email.trim() : "";
+  const name = typeof session.user.name === "string" ? session.user.name.trim() : "";
+  return {authenticated: true, accountLabel: email || name || null};
 }

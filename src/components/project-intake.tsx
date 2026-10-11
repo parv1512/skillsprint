@@ -70,7 +70,7 @@ export function ProjectIntakeForm() {
       {busy && <p role="status" className="generating-status"><span className="loading-spinner" />Creating milestones… Up to a minute.</p>}
       <button type="submit" className="button button-primary" disabled={busy}>{busy ? "Creating your roadmap…" : "Create my roadmap"}<Icon name="arrow" /></button>
       <p className="form-disclosure">Sent to Gemini. Don’t include secrets or private information.</p>
-    </form></div>
+    </form><aside className="intake-margin intake-next"><h2>What happens next</h2><p>Get a roadmap with ordered milestones. Open a milestone for building steps, then work in your editor.</p></aside></div>
     {generated && !busy && <section className="unsaved-roadmap"><p role="status" className="notice notice-warning">Your roadmap was generated, but couldn’t be saved. Keep this page open to view it.</p><button className="button button-secondary" onClick={async () => { setBusy(true); try { await save(generated); } catch (cause) { setError(cause instanceof Error ? cause.message : "Couldn’t save."); } finally { setBusy(false); } }}>Try saving again</button><RoadmapView roadmap={generated.roadmap} /></section>}
   </>;
 }

@@ -12,6 +12,7 @@ type Workspace = {
   error: string | null;
   mode: "preview" | "signed-out" | "persistent" | "unavailable";
   authenticated: boolean;
+  accountLabel: string | null;
   passport: PassportSkill[];
   refreshPassport: () => Promise<void>;
   refreshWorkspace: () => Promise<void>;
@@ -29,14 +30,19 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const [mode, setMode] = useState<Workspace["mode"]>("unavailable");
   const [authenticated, setAuthenticated] = useState(false);
+  const [accountLabel, setAccountLabel] = useState<string | null>(null);
   const [passport, setPassport] = useState<PassportSkill[]>([]);
   const [sessionProjects, setSessionProjects] = useState<SessionProject[]>([]);
   const refreshPassport = useCallback(async () => { setPassport(passportSchema.parse((await workspaceFetch("/api/passport")).skills)); }, []);
   const refreshWorkspace = useCallback(async () => {
-    setReady(false); setError(null);
+    setReady(false); setError(null); setAccountLabel(null);
     try {
       const configuration = await workspaceFetch("/api/workspace");
       setAuthenticated(configuration.authenticated === true);
+      setAccountLabel(configuration.authenticated === true && typeof configuration.accountLabel === "string" ? configuration.accountLabel : null);
+      let temporary: SessionProject[] = [];
+      try {temporary = await createSessionProjectStore(window.sessionStorage).listProjects();} catch { /* Storage may be unavailable; do not claim projects were preserved. */ }
+      setSessionProjects(temporary);
       if (!configuration.authConfigured) {
         const preview = createSessionProjectStore(window.sessionStorage);
         setStore(null); setMode("preview"); setProjects(await preview.listProjects()); setPassport([]);
@@ -49,10 +55,9 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
         const saved = await remote.listProjects();
         setStore(remote); setMode("persistent"); setProjects(saved);
         await refreshPassport();
-        try { const temporary = await createSessionProjectStore(window.sessionStorage).listProjects(); setSessionProjects(temporary.filter(item => !saved.some(project => project.id === item.id))); }
-        catch { setSessionProjects([]); }
+        setSessionProjects(temporary.filter(item => !saved.some(project => project.id === item.id)));
       }
-    } catch(cause) { setMode("unavailable"); setStore(null); setError(cause instanceof Error ? cause.message : "Couldn’t load your workspace."); }
+    } catch(cause) { setMode("unavailable"); setStore(null); setAccountLabel(null); setSessionProjects([]); setError(cause instanceof Error ? cause.message : "Couldn’t load your workspace."); }
     finally { setReady(true); }
   }, [refreshPassport]);
   useEffect(() => {
@@ -75,7 +80,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     for (const project of sessionProjects) await store.saveProject(project);
     await refreshWorkspace();
   }, [store, sessionProjects, refreshWorkspace]);
-  return <ProjectContext.Provider value={{ projects, ready, error, saveProject, loadProject, mode, authenticated, passport, refreshPassport, refreshWorkspace, sessionProjects, importSessionProjects }}>{children}</ProjectContext.Provider>;
+  return <ProjectContext.Provider value={{ projects, ready, error, saveProject, loadProject, mode, authenticated, accountLabel, passport, refreshPassport, refreshWorkspace, sessionProjects, importSessionProjects }}>{children}</ProjectContext.Provider>;
 }
 
 export function useProjects() {

@@ -1,5 +1,6 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import {useResultFocus} from "./result-focus";
 import type { Starter } from "@/lib/domain/starter";
 import { createStarterArchive } from "@/lib/projects/starter-archive";
 import { formatStarter } from "@/lib/projects/format-source";
@@ -8,6 +9,10 @@ export function StarterFiles({ starter, busy, generate, openRequest = 0, request
   const [selected, setSelected] = useState(0);
   const [feedback, setFeedback] = useState("");
   const [open, setOpen] = useState(!starter);
+  const heading=useRef<HTMLHeadingElement>(null);
+  const feedbackResult=useRef<HTMLParagraphElement>(null);
+  const summary=useRef<HTMLElement>(null);
+  const focusResult=useResultFocus();
   useEffect(() => {
     if (openRequest > 0) setOpen(true);
     const index = starter?.files.findIndex(file => file.path === requestedPath) ?? -1;
@@ -22,6 +27,10 @@ export function StarterFiles({ starter, busy, generate, openRequest = 0, request
   }, [starter]);
   const readable = formatted && formatted.source === starter ? formatted.value : undefined;
   const file = readable?.files[selected] ?? readable?.files[0];
+  useEffect(() => {
+    if(openRequest > 0)focusResult(readable ? heading : summary);
+    // A new request or newly formatted files are action results; opening a field is not.
+  }, [openRequest, readable, focusResult]);
   function download() {
     if (!readable) return;
     const url = URL.createObjectURL(new Blob([createStarterArchive(readable)], { type: "application/zip" }));
@@ -29,16 +38,17 @@ export function StarterFiles({ starter, busy, generate, openRequest = 0, request
     link.href = url; link.download = "skillsprint-starter.zip"; link.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
     setFeedback("Starter downloaded");
+    focusResult(feedbackResult);
   }
-  return <details className="starter-section" open={open} onToggle={(event) => setOpen(event.currentTarget.open)}><summary>Starter files</summary>
+  return <details className="starter-section" open={open} onToggle={(event) => setOpen(event.currentTarget.open)}><summary ref={summary}>Starter files</summary>
     {!starter ? <><p>Basic setup, file structure, and a first task.</p>{setupMilestone ? <p>Open “{setupMilestone}” in the roadmap to create your starter.</p> : <button className="button button-secondary" disabled={busy} onClick={generate}>Create starter files</button>}</> : <>
       <p>{starter.summary}</p>
-      <div className="starter-browser"><nav aria-label="Starter file structure">{starter.files.map((item, index) => <button type="button" key={item.path} aria-pressed={selected === index} onClick={() => { setSelected(index); setFeedback(""); }}><code>{item.path}</code></button>)}</nav><div className="starter-file">{!readable && <p role="status">Preparing readable files…</p>}{file && <><h3>{file.path}</h3><p>{file.purpose}</p><pre className="code-block starter-code" aria-label={`${file.path} source code`}><code>{file.content.trimEnd().split("\n").map((line, index) => <span className="code-line" key={index}><span className="line-number" aria-hidden="true">{index + 1}</span><span>{line || "\u200b"}</span></span>)}</code></pre><button className="text-link" type="button" onClick={async () => { try { await navigator.clipboard.writeText(file.content); setFeedback("File copied"); } catch { setFeedback("Couldn’t copy. Select the code to copy it manually."); } }}>Copy file</button></>}</div></div>
+      <div className="starter-browser"><nav aria-label="Starter file structure">{starter.files.map((item, index) => <button type="button" key={item.path} aria-pressed={selected === index} onClick={() => { setSelected(index); setFeedback(""); focusResult(heading); }}><code>{item.path}</code></button>)}</nav><div className="starter-file">{!readable && <p role="status">Preparing readable files…</p>}{file && <><h3 ref={heading} tabIndex={-1}>{file.path}</h3><p>{file.purpose}</p><pre className="code-block starter-code" aria-label={`${file.path} source code`}><code>{file.content.trimEnd().split("\n").map((line, index) => <span className="code-line" key={index}><span className="line-number" aria-hidden="true">{index + 1}</span><span>{line || "\u200b"}</span></span>)}</code></pre><button className="text-link" type="button" onClick={async () => { try { await navigator.clipboard.writeText(file.content); setFeedback("File copied"); focusResult(feedbackResult); } catch { setFeedback("Couldn’t copy. Select the code to copy it manually."); focusResult(feedbackResult); } }}>Copy file</button></>}</div></div>
       <h3>Set up locally</h3><ol className="starter-steps">{starter.setupSteps.map((step, index) => <li key={index}>{step}</li>)}</ol>
       <details className="starter-exercise"><summary>Starter’s suggested first edit</summary><p>{starter.firstTask}</p></details>
       <button className="button button-secondary" type="button" disabled={!readable} onClick={download}>Download starter ZIP</button>
       <p className="quiet-note">AI-generated starter. Not executed or tested by SkillSprint.</p>
-      <p role="status" className="workspace-feedback">{feedback}</p>
+      <p ref={feedbackResult} tabIndex={-1} role="status" className="workspace-feedback">{feedback}</p>
     </>}
   </details>;
 }

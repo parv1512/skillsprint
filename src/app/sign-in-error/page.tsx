@@ -1,3 +1,6 @@
+import type { Metadata } from "next";
+export const metadata: Metadata = {title: "Sign-in error"};
+
 const messages: Record<string, string> = {
   invalid_client: "The application’s Auth0 client credentials need to be checked.",
   unauthorized_client: "This Auth0 application isn’t permitted to finish this login flow.",

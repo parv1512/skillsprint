@@ -13,8 +13,26 @@ body { font-family: var(--font-ui); }
 .skip-link:not(:focus) { clip-path: inset(50%); width: 1px; height: 1px; padding: 0; overflow: hidden; white-space: nowrap; }
 .field-notes .sidebar { background: var(--surface); width: 226px; padding: 35px 18px 25px; }
 .field-notes .main-column { margin-left: 226px; width: calc(100% - 226px); }
-.field-notes .brand { font-size: 22px; margin: 0 10px 52px; letter-spacing: -.7px; }
+.field-notes .brand { font-size: 22px; margin: 0 10px 24px; letter-spacing: -.7px; }
 .field-notes .brand-mark { border-radius: 5px; width: 29px; height: 31px; }
+.brand-mark { flex-shrink: 0; }
+@media (min-width: 851px) {
+  .field-notes.project-shell .main-column { margin-left: 72px; width: calc(100% - 72px); }
+  .field-notes.project-shell .sidebar { width: 72px; overflow: hidden; z-index: 15; transition: width 180ms ease; }
+  .field-notes.project-shell .brand { width: 180px; margin-left: 4px; margin-right: 0; white-space: nowrap; }
+  .project-shell .sidebar .brand-name, .project-shell .sidebar .brand-dot,
+  .project-shell .sidebar nav, .project-shell .sidebar .sidebar-account, .project-shell .sidebar > .button {
+    visibility: hidden; opacity: 0; pointer-events: none; transform: translateX(-12px); transition: opacity 180ms ease, transform 180ms ease;
+  }
+  .field-notes.project-shell .sidebar:hover, .field-notes.project-shell .sidebar:focus-within { width: 226px; overflow-y: auto; }
+  .project-shell .sidebar:is(:hover, :focus-within) .brand-name, .project-shell .sidebar:is(:hover, :focus-within) .brand-dot,
+  .project-shell .sidebar:is(:hover, :focus-within) nav, .project-shell .sidebar:is(:hover, :focus-within) .sidebar-account,
+  .project-shell .sidebar:is(:hover, :focus-within) > .button { visibility: visible; opacity: 1; pointer-events: auto; transform: translateX(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .field-notes.project-shell .sidebar, .project-shell .sidebar .brand-name, .project-shell .sidebar .brand-dot,
+  .project-shell .sidebar nav, .project-shell .sidebar .sidebar-account, .project-shell .sidebar > .button { transition: none; }
+}
 .field-notes .nav-label { font-family: var(--font-code); letter-spacing: 1.2px; font-size: 9px; }
 .field-notes .nav-item { border-radius: 4px; font-size: 12px; padding: 13px 12px; color: #555e51; }
 .field-notes .nav-item.active { background: #e8eadf; color: var(--green); }
@@ -74,12 +92,17 @@ body { font-family: var(--font-ui); }
 
 /* Keep the workspace focused on actions and project content. */
 .field-notes main { padding-top: 48px; }
-.studio-heading { align-items: center; }
+.studio-heading { align-items: center; justify-content: flex-start; gap: 24px; }
+.field-notes .page-heading { justify-content: flex-start; gap: 24px; flex-wrap: wrap; }
+.field-notes .page-heading h1 { margin-bottom: 0; }
 .studio-heading h1 { margin: 0; }
 .studio-section-heading h2 { font-family: var(--font-heading); font-size: 25px; font-weight: 400; }
 .studio-margin h2 { margin: 0 0 16px; font-size: 25px; }
-.studio-empty { min-height: 210px; padding-left: 0; }
-.intake-layout { grid-template-columns: minmax(0, 680px); }
+.studio-empty { min-height: 0; padding-left: 0; }
+.intake-layout { grid-template-columns: minmax(0, 2fr) minmax(180px, 1fr); }
+.intake-next { align-self: start; }
+@media (max-width: 1000px) { .intake-layout { grid-template-columns: minmax(0, 1fr); }.intake-next { padding: 20px 0 0; border-left: 0; border-top: 1px solid var(--line); } }
+@media (max-width: 850px) { .field-notes .sidebar > .button { align-self: flex-start; width: auto; } }
 .passport-legend { margin-top: 0; }
 @media (max-width: 600px) { .field-notes main { padding-top: 30px; }.studio-heading { align-items: flex-start; } }
 .learning-tabs { display:flex; gap:24px; border-bottom:1px solid var(--line); margin-top:26px; }
@@ -136,6 +159,15 @@ body { font-family: var(--font-ui); }
 .targeted-check summary { cursor: pointer; font-weight: 600; margin-bottom: 1rem; }
 .skill-reuse ul { padding-left: 1.2rem; }
 .skill-reuse li { margin: .7rem 0; }
+.skill-reuse .button[aria-pressed="true"] { background: var(--green); color: var(--surface); border-color: var(--green); }
+.milestone-knowledge-check { border-top: 1px solid var(--line); margin-top: 24px; padding-top: 8px; }
+.check-format { display: flex; flex-wrap: wrap; gap: 18px; margin: 18px 0; }
+.check-format legend, .check-options legend { font-size: 13px; font-weight: 600; margin-bottom: 12px; }
+.check-format label, .check-options label { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; line-height: 1.8; cursor: pointer; }
+.check-format input, .check-options input { margin-top: 5px; accent-color: var(--green); }
+.check-options { margin: 24px 0; }
+.check-options label { padding: 8px 0; }
+.milestone-knowledge-check > .form-field { margin-top: 24px; }
 @media (max-width: 700px) { .passport-record-heading { flex-direction: column; } }
 .guided-build { padding: 8px 0 26px; border-bottom: 1px solid var(--line); margin-bottom: 24px; }
 .learning-workspace .guided-build h3 { font: 400 26px/1.25 var(--font-heading); margin: 12px 0; }
@@ -151,6 +183,12 @@ body { font-family: var(--font-ui); }
 .guided-reflection summary, .guided-example summary, .guided-history summary, .guided-attempt summary, .guided-setup summary, .concept-notes summary { font-size: 12px; cursor: pointer; color: var(--green); }
 .guided-build .workspace-actions { margin: 20px 0; }
 .guided-next { padding-top: 10px; }
+.guided-steps { list-style: none; padding: 0; margin: 0; }
+.guided-step-open { scroll-margin-top: 24px; }
+.learning-workspace [tabindex="-1"] { scroll-margin-top: 24px; }
+.guided-step-summary { padding: 18px 0; border-top: 1px solid var(--line); }
+.guided-step-summary .eyebrow { display: block; margin-bottom: 6px; }
+.guided-step-summary h4, .guided-step-summary p { margin: 4px 0; }
 .guided-next .quiet-note { font-size: 11px; }
 .guided-attempt .form-field { margin-top: 20px; }
 .starter-code { white-space: pre; max-height: 440px; tab-size: 2; }
