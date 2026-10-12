@@ -28,7 +28,7 @@ Verify the stable URL, sign-in, an owned project, Passport, reload persistence, 
 
 ## Shared request limits
 
-Tiger Data atomically enforces 30 attempts per student per 10 minutes and one active AI request across Vercel instances. Subject identifiers are hashed in the transient quota table. A 150-second lease recovers after an interrupted request; release checks the exact lease token. A database failure refuses new AI requests safely. This is a per-student limit, not a global daily spending cap or a promise of provider availability.
+Tiger Data atomically enforces 30 attempts per student per 10 minutes, one active AI request, 15 AI requests per account per 24 hours, and 45 AI requests for the whole site per 24 hours. The daily counters use the same quota table and roll back when a shorter limit refuses the call. Subject identifiers are hashed. A 150-second lease recovers after an interrupted request, and release checks the exact lease token. A database failure refuses new AI requests safely. `AI_STUDENT_DAILY_LIMIT` and `AI_GLOBAL_DAILY_LIMIT` override the daily caps. This is not a promise of provider availability.
 
 ## Custom domain in Porkbun
 

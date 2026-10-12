@@ -25,7 +25,7 @@ Practiced requires saved practical work plus student-confirmed milestone complet
 
 ## Verification and current limits
 
-See BUILD_STATUS.md for actual checks. The AI provider can fail or exhaust quota; input is retained and retries are explicit. Tiger Data enforces one active AI request and 30 attempts per student per ten minutes across Vercel instances. New lesson prompts shorten familiar introductions only for practiced/mastered skills supported by practical evidence in another project. Practical edits and independent project completion remain required. This is AI-reviewed understanding and student-confirmed work, not executed-code verification.
+See BUILD_STATUS.md for actual checks. The AI provider can fail or exhaust quota; input is retained and retries are explicit. Tiger Data enforces one active AI request, 30 attempts per student per ten minutes, 15 AI requests per account per 24 hours, and 45 AI requests for the whole site per 24 hours. New lesson prompts shorten familiar introductions only for practiced/mastered skills supported by practical evidence in another project. Practical edits and independent project completion remain required. This is AI-reviewed understanding and student-confirmed work, not executed-code verification.
 
 ## Fields to finish after owner input
 

@@ -1,7 +1,7 @@
 import { beforeAll, afterAll, describe, expect, it, vi } from "vitest";
 import { randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, eq, inArray, like, sql } from "drizzle-orm";
 import { getDatabase } from "../src/lib/db/client";
 import { repositoryFor, type WorkspaceRepository } from "../src/lib/db/repository";
 import { students, projects, milestones, activities, assessments, evidence, skillRecords, aiUsage } from "../src/lib/db/schema";
@@ -12,6 +12,8 @@ import { confirmMilestone, reopenMilestone } from "../src/lib/projects/progress"
 import { handleWorkspace } from "../src/lib/server/workspace-handler";
 
 const enabled = process.env.SKILLSPRINT_DATABASE_TEST === "1";
+const budgetNamespace = `itest-${randomUUID()}`;
+process.env.AI_BUDGET_NAMESPACE = budgetNamespace;
 describe.skipIf(!enabled)("Tiger Data persistence and ownership (isolated synthetic students)", () => {
   let a: WorkspaceRepository, b: WorkspaceRepository;
   const subjects = [0, 1].map(() => `skillsprint-integration-test|${randomUUID()}`);
@@ -30,6 +32,7 @@ describe.skipIf(!enabled)("Tiger Data persistence and ownership (isolated synthe
     // Delete only the two synthetic profiles created by this run, using exact subjects and IDs.
     const db = getDatabase(); const rows = await db.select().from(students).where(inArray(students.subject, subjects));
     await db.delete(aiUsage).where(inArray(aiUsage.key,subjects.map(aiUsageKey)));
+    await db.delete(aiUsage).where(like(aiUsage.key, `budget:${budgetNamespace}:%`));
     const owners = rows.map(row => row.id);
     if (owners.length) await db.transaction(async tx => {
       await tx.delete(evidence).where(inArray(evidence.ownerId, owners));
@@ -45,20 +48,45 @@ describe.skipIf(!enabled)("Tiger Data persistence and ownership (isolated synthe
   it("shares concurrent leases, attempt limits, and expired-lease recovery across callers",async()=>{
     const subject=subjects[0],db=getDatabase(),key=aiUsageKey(subject);
     const leases=await Promise.all([databaseAILeases.acquire(subject),databaseAILeases.acquire(subject)]);
-    expect(leases.filter(Boolean)).toHaveLength(1);
-    const first=leases.find(Boolean)!;
+    expect(leases.filter(item => typeof item === "string")).toHaveLength(1);
+    const first=leases.find((item): item is string => typeof item === "string");
+    if (!first) throw new Error("Expected one AI lease.");
     await databaseAILeases.release(subject,"00000000-0000-4000-8000-000000000099");
-    expect(await databaseAILeases.acquire(subject)).toBeNull();
+    expect(await databaseAILeases.acquire(subject)).toEqual({ok:false,reason:"busy"});
     await databaseAILeases.release(subject,first);
     await db.update(aiUsage).set({attempts:30}).where(eq(aiUsage.key,key));
-    expect(await databaseAILeases.acquire(subject)).toBeNull();
+    expect(await databaseAILeases.acquire(subject)).toEqual({ok:false,reason:"busy"});
     await db.update(aiUsage).set({windowStarted:sql`now() - interval '11 minutes'`}).where(eq(aiUsage.key,key));
-    const reset=await databaseAILeases.acquire(subject);expect(reset).not.toBeNull();
+    const reset=await databaseAILeases.acquire(subject);
+    if (typeof reset !== "string") throw new Error("Expected a reset AI lease.");
     await db.update(aiUsage).set({leaseExpires:sql`now() - interval '1 second'`}).where(eq(aiUsage.key,key));
-    const recovered=await databaseAILeases.acquire(subject);expect(recovered).not.toBeNull();
-    await databaseAILeases.release(subject,reset!);
-    expect(await databaseAILeases.acquire(subject)).toBeNull();
-    await databaseAILeases.release(subject,recovered!);
+    const recovered=await databaseAILeases.acquire(subject);
+    if (typeof recovered !== "string") throw new Error("Expected a recovered AI lease.");
+    await databaseAILeases.release(subject,reset);
+    expect(await databaseAILeases.acquire(subject)).toEqual({ok:false,reason:"busy"});
+    await databaseAILeases.release(subject,recovered);
+  });
+  it("stops AI calls at the account cap and then the shared daily cap",async()=>{
+    const previousStudent=process.env.AI_STUDENT_DAILY_LIMIT, previousGlobal=process.env.AI_GLOBAL_DAILY_LIMIT, previousNamespace=process.env.AI_BUDGET_NAMESPACE;
+    const namespace=`cap-${randomUUID()}`;
+    process.env.AI_BUDGET_NAMESPACE=namespace;
+    process.env.AI_STUDENT_DAILY_LIMIT="1";
+    process.env.AI_GLOBAL_DAILY_LIMIT="2";
+    try {
+      const first=await databaseAILeases.acquire(subjects[0]);
+      expect(first).toEqual(expect.any(String));
+      await databaseAILeases.release(subjects[0],first as string);
+      expect(await databaseAILeases.acquire(subjects[0])).toEqual({ok:false,reason:"account"});
+      const second=await databaseAILeases.acquire(subjects[1]);
+      expect(second).toEqual(expect.any(String));
+      await databaseAILeases.release(subjects[1],second as string);
+      expect(await databaseAILeases.acquire(subjects[1])).toEqual({ok:false,reason:"site"});
+    } finally {
+      process.env.AI_BUDGET_NAMESPACE=previousNamespace;
+      if(previousStudent===undefined)delete process.env.AI_STUDENT_DAILY_LIMIT; else process.env.AI_STUDENT_DAILY_LIMIT=previousStudent;
+      if(previousGlobal===undefined)delete process.env.AI_GLOBAL_DAILY_LIMIT; else process.env.AI_GLOBAL_DAILY_LIMIT=previousGlobal;
+      await getDatabase().delete(aiUsage).where(like(aiUsage.key,`budget:${namespace}:%`));
+    }
   });
   it("persists project data and refuses another owner's ID without modifying it", async () => {
     await a.saveProject(input);

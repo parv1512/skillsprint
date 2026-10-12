@@ -140,7 +140,7 @@ Vercel is connected to **parv1512/skillsprint**, with **main** as the production
 
 Production credentials are stored privately in Vercel; local environment files are not uploaded. Branch previews do not automatically have production credentials or matching Auth0 settings. See [DEPLOYMENT.md](docs/DEPLOYMENT.md) for domain and release details.
 
-- Tiger Data enforces **one active AI request and 30 attempts per student per ten minutes** across instances. This is a per-student limit, not a global daily budget.
+- Tiger Data enforces **one active AI request and 30 attempts per student per ten minutes**, plus **15 AI requests per account and 45 for the whole site per 24 hours**. A new account cannot spend past the shared cap. Set `AI_STUDENT_DAILY_LIMIT` and `AI_GLOBAL_DAILY_LIMIT` to change those daily caps.
 - Gemini can exhaust quota, time out, or return unavailable responses. Requests and retries are explicit; failures do not create passing evidence. Saved real responses can be replayed, with their origin made clear.
 - AI guidance and reviews can be imperfect. They are not executed-code verification or independent skill certification.
 - Another already-open tab needs a reload to see new saves; live multi-tab synchronization is not implemented.
